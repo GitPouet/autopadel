@@ -1,0 +1,386 @@
+@import url('https://fonts.googleapis.com/css2?family=Staatliches&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Exo+2:wght@400;700&display=swap');
+
+:root {
+  --primary-blue: #00B4FF;
+  --primary-pink: #FF00AA;
+  --primary-yellow: #FFD700;
+  --dark-blue: #0090D0;
+  --light-blue: #66D9FF;
+  --text-color: #333;
+  --bg-color: #f0f2f5;
+  --card-bg: #ffffff;
+  --border-color: rgba(0, 180, 255, 0.3);
+  --spacing-sm: 8px;
+  --spacing-md: 16px;
+  --spacing-lg: 24px;
+  --border-radius: 8px;
+  --font-family-headings: 'Staatliches', sans-serif;
+  --font-family-body: 'Exo 2', sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: rgba(0,0,0,0);
+}
+
+body {
+  font-family: var(--font-family-body);
+  margin: 0;
+  padding: 0;
+  background-color: var(--bg-color);
+  background-image: linear-gradient(135deg, #f0f2f5 0%, #e6e9f0 100%);
+  color: var(--text-color);
+  line-height: 1.5;
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-family-headings);
+  text-align: center;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--primary-blue);
+}
+
+label {
+  font-family: var(--font-family-headings);
+  font-size: 1.2rem;
+  text-align: center;
+  display: block;
+  margin-bottom: 10px;
+  color: var(--primary-blue);
+  text-transform: uppercase;
+}
+
+input, select {
+  font-family: var(--font-family-body);
+  padding: 14px var(--spacing-md);
+  border: 2px solid var(--border-color);
+  border-radius: var(--border-radius);
+  font-size: 16px;
+  width: 100%;
+  -webkit-appearance: none;
+  appearance: none;
+  background-color: var(--card-bg);
+  transition: all 0.3s ease;
+  text-align: center;
+}
+
+input:focus, select:focus {
+  outline: none;
+  border-color: var(--primary-pink);
+  box-shadow: 0 0 0 3px rgba(255, 0, 170, 0.2);
+}
+
+select {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath fill='%2300B4FF' d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  cursor: pointer;
+  padding-right: 40px;
+}
+
+select:hover {
+  background-color: rgba(0, 180, 255, 0.05);
+}
+
+.form-group {
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+header {
+  background-color: var(--primary-blue);
+  background-image: linear-gradient(45deg, var(--primary-blue), var(--primary-pink));
+  color: white;
+  text-align: center;
+  padding: var(--spacing-md) var(--spacing-sm);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+}
+
+header h1 {
+  margin: 0;
+  font-size: 32px;
+  font-weight: 700;
+  color: white;
+  text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+}
+
+.time-select-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+}
+
+.time-select-container select {
+  flex: 1;
+  min-width: 100px;
+  background-color: white;
+  border: 2px solid var(--border-color);
+  border-radius: 8px;
+  transition: all 0.3s ease;
+}
+
+.time-select-container select:hover {
+  border-color: var(--primary-pink);
+}
+
+@media (max-width: 576px) {
+  .time-select-container select {
+    flex-basis: 100%;
+  }
+}
+
+.reservation-date-block {
+  background: white;
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 25px;
+  box-shadow: 0 5px 15px rgba(0, 180, 255, 0.1);
+  border: 2px solid var(--border-color);
+}
+
+.date-selection-method {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  margin-top: 15px;
+}
+
+.date-option {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  background: white;
+  border: 2px solid var(--border-color);
+  border-radius: 10px;
+  padding: 18px 15px;
+  margin-bottom: 15px;
+  transition: all 0.3s ease;
+  text-align: center;
+}
+
+.date-option:has(input:checked) {
+  background-color: rgba(0, 180, 255, 0.05);
+  border-color: var(--primary-blue);
+  box-shadow: 0 5px 15px rgba(0, 180, 255, 0.15);
+  transform: translateY(-2px);
+}
+
+.date-option input[type="radio"] {
+  width: 24px;
+  height: 24px;
+  accent-color: var(--primary-pink);
+}
+
+.date-option label {
+  font-weight: bold;
+  margin-bottom: 0;
+}
+
+.option-description, .date-info {
+  font-size: 14px;
+  color: #666;
+  text-align: center;
+  margin-top: 5px;
+  display: block;
+  width: 100%;
+}
+
+.date-input-container,
+.advance-input-container,
+.dates-input-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  margin-top: 12px;
+  width: 100%;
+}
+
+.selected-dates-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 15px;
+  justify-content: center;
+}
+
+.date-tag {
+  background: linear-gradient(45deg, var(--primary-blue), var(--primary-pink));
+  color: white;
+  padding: 8px 15px;
+  border-radius: 20px;
+  display: flex;
+  align-items: center;
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
+  font-weight: 500;
+}
+
+.date-tag button {
+  background: rgba(255, 255, 255, 0.3);
+  border: none;
+  color: white;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  margin-left: 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  font-size: 16px;
+  padding: 0;
+}
+
+.date-tag button:hover {
+  background: rgba(255, 255, 255, 0.5);
+  transform: scale(1.1);
+}
+
+.date-add-container {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 10px;
+  width: 100%;
+  justify-content: center;
+}
+
+.btn-add-date {
+  background: var(--primary-yellow);
+  color: #333;
+  border: none;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  font-size: 20px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+  box-shadow: 0 3px 8px rgba(255, 215, 0, 0.3);
+}
+
+.btn-add-date:hover {
+  transform: scale(1.1);
+  box-shadow: 0 4px 12px rgba(255, 215, 0, 0.4);
+}
+
+.btn-add-date:active {
+  transform: scale(0.95);
+}
+
+input[type="checkbox"] {
+  width: 24px;
+  height: 24px;
+  accent-color: var(--primary-pink);
+  margin-right: 10px;
+}
+
+#status {
+  margin: 25px auto;
+  padding: 15px;
+  border-radius: 10px;
+  font-weight: 500;
+  min-height: 30px;
+  background-color: white;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+  text-align: center;
+  max-width: 600px;
+  transition: all 0.3s ease;
+}
+
+button[type="submit"] {
+  background: linear-gradient(45deg, var(--primary-pink), var(--primary-blue));
+  color: white;
+  padding: 16px 32px;
+  border: none;
+  border-radius: 30px;
+  cursor: pointer;
+  font-weight: bold;
+  font-size: 18px;
+  transition: all 0.3s ease;
+  margin: 25px auto;
+  display: block;
+  text-transform: uppercase;
+  font-family: var(--font-family-headings);
+  letter-spacing: 1px;
+  box-shadow: 0 5px 15px rgba(0, 180, 255, 0.3);
+  width: 80%;
+  max-width: 400px;
+}
+
+button[type="submit"]:hover {
+  box-shadow: 0 8px 20px rgba(0, 180, 255, 0.4);
+  transform: translateY(-2px);
+}
+
+button[type="submit"]:active {
+  transform: translateY(1px);
+  box-shadow: 0 3px 10px rgba(0, 180, 255, 0.2);
+}
+
+#installBanner {
+  background: linear-gradient(45deg, var(--primary-blue), var(--primary-pink));
+  color: white;
+}
+
+#installButton {
+  background-color: white;
+  color: var(--primary-blue);
+  border: none;
+  padding: 10px 20px;
+  border-radius: 20px;
+  font-weight: bold;
+  transition: all 0.3s ease;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.1);
+}
+
+#installButton:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 12px rgba(0, 0, 0, 0.15);
+}
+
+.loading-indicator {
+  text-align: center;
+}
+
+.spinner {
+  width: 48px;
+  height: 48px;
+  margin: 0 auto;
+  border: 3px solid rgba(0, 180, 255, 0.3);
+  border-top-color: var(--primary-blue);
+  border-radius: 50%;
+  animation: spin 1s infinite linear, colorChange 3s infinite alternate;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes colorChange {
+  0% { border-top-color: var(--primary-blue); }
+  50% { border-top-color: var(--primary-pink); }
+  100% { border-top-color: var(--primary-yellow); }
+}
+
+.empty-dates {
+  font-style: italic;
+  color: #999;
+  text-align: center;
+}
+
+/* Amélioration du focus pour l'accessibilité */
+*:focus-visible {
+  outline: 2px solid var(--primary-pink);
+  outline-offset: 2px;
+}

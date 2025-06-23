@@ -1,0 +1,1221 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>AUTOPADEL - Configuration</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="theme-color" content="#00B4FF">
+  <link rel="stylesheet" href="assets/css/style.css">
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="assets/icons/icon-192x192.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Staatliches&family=Exo+2:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <style>
+    :root {
+      --primary-color: #00B4FF;
+      --primary-dark: #0090D0;
+      --primary-light: #66D9FF;
+      --primary-pink: #FF00AA;
+      --primary-yellow: #FFD700;
+      --text-color: #333;
+      --bg-color: #f9f9f9;
+      --card-bg: #ffffff;
+      --border-color: #ddd;
+      --spacing-sm: 8px;
+      --spacing-md: 16px;
+      --spacing-lg: 24px;
+      --border-radius: 8px;
+      --font-size-normal: 16px;
+      --font-size-sm: 14px;
+      --font-size-lg: 18px;
+    }
+    
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: rgba(0,0,0,0);
+    }
+    
+    body {
+      font-family: 'Exo 2', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      font-size: var(--font-size-normal);
+      line-height: 1.5;
+      padding-bottom: env(safe-area-inset-bottom);
+    }
+    
+    header {
+      background: linear-gradient(45deg, #00B4FF, #FF00AA);
+      padding: 20px 0;
+      text-align: center;
+    }
+    
+    header h1 {
+      margin: 0;
+      font-family: 'Staatliches', cursive;
+      font-size: 36px;
+      letter-spacing: 2px;
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+      color: white;
+    }
+    
+    form {
+      display: flex;
+      flex-direction: column;
+      gap: var(--spacing-md);
+    }
+    
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: var(--spacing-sm);
+    }
+    
+    label {
+      font-weight: bold;
+      font-size: var(--font-size-normal);
+    }
+    
+    input, select {
+      padding: 14px var(--spacing-md);
+      border: 1px solid var(--border-color);
+      border-radius: var(--border-radius);
+      font-size: var(--font-size-normal);
+      width: 100%;
+      -webkit-appearance: none;
+      appearance: none;
+      background-color: var(--card-bg);
+    }
+    
+    select {
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath fill='%23333' d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 10px center;
+      padding-right: 30px;
+    }
+    
+    .time-select-container {
+      display: flex;
+      flex-direction: column;
+      gap: var(--spacing-md);
+    }
+    
+    .date-option {
+      position: relative;
+      background-color: var(--card-bg);
+      border-radius: var(--border-radius);
+      padding: var(--spacing-md);
+      margin-bottom: var(--spacing-md);
+      border: 2px solid var(--border-color);
+      overflow: hidden;
+      cursor: pointer;
+    }
+    
+    .date-option::before {
+      display: none;
+    }
+    
+    .date-option:has(input:checked)::before {
+      animation: none;
+    }
+    
+    @keyframes shine {
+      0%, 50%, 100% { opacity: 0; }
+    }
+    
+    .active-option {
+      border: 2px solid var(--primary-color);
+      box-shadow: 0 2px 10px rgba(76,175,80,0.1);
+    }
+    
+    .date-option:not(.active-option) .date-input-container input,
+    .date-option:not(.active-option) .dates-input-container input,
+    .date-option:not(.active-option) .date-add-container button {
+      opacity: 0.6;
+    }
+    
+    .date-input-container, .dates-input-container {
+      margin-top: var(--spacing-sm);
+      padding-left: var(--spacing-lg);
+    }
+    
+    .date-info {
+      display: block;
+      font-size: var(--font-size-sm);
+      color: #666;
+      margin-top: var(--spacing-sm);
+    }
+    
+    .date-add-container {
+      display: flex;
+      gap: var(--spacing-sm);
+      margin-bottom: var(--spacing-sm);
+    }
+    
+    .btn-add-date {
+      padding: 12px var(--spacing-md);
+      background-color: var(--primary-color);
+      color: white;
+      border: none;
+      border-radius: var(--border-radius);
+      font-size: var(--font-size-normal);
+      cursor: pointer;
+      min-width: 80px;
+    }
+    
+    .selected-dates-container {
+      margin-bottom: var(--spacing-md);
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--spacing-sm);
+    }
+    
+    .date-tag {
+      background: linear-gradient(45deg, var(--primary-color), var(--primary-pink));
+      color: white;
+      padding: 8px 15px 8px 10px;
+      border-radius: 20px;
+      display: flex;
+      align-items: center;
+      flex-direction: column;
+      gap: 5px;
+      box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
+    }
+    
+    .date-tag-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      width: 100%;
+    }
+    
+    .date-tag-hours {
+      display: flex;
+      gap: 5px;
+      font-size: 12px;
+      background-color: rgba(255, 255, 255, 0.2);
+      padding: 3px 6px;
+      border-radius: 10px;
+      font-weight: 500;
+    }
+    
+    .hour-chip {
+      background-color: rgba(255, 255, 255, 0.3);
+      padding: 2px 5px;
+      border-radius: 8px;
+    }
+    
+    .remove-date {
+      background: none;
+      border: none;
+      color: white;
+      font-size: 16px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background-color: rgba(255,255,255,0.2);
+    }
+    
+    .empty-dates {
+      font-style: italic;
+      color: #999;
+    }
+    
+    input[type="checkbox"] {
+      position: relative;
+      cursor: pointer;
+      width: 20px;
+      height: 20px;
+      margin-right: 10px;
+    }
+    
+    input[type="checkbox"]:checked {
+      animation: pulse 0.3s;
+    }
+    
+    @keyframes pulse {
+      0% {
+        transform: scale(1);
+      }
+      50% {
+        transform: scale(1.2);
+      }
+      100% {
+        transform: scale(1);
+      }
+    }
+    
+    #status {
+      margin-top: var(--spacing-lg);
+      padding: var(--spacing-md);
+      border-radius: var(--border-radius);
+      font-weight: bold;
+      min-height: 20px;
+      background-color: var(--card-bg);
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+      transition: all 0.5s ease;
+    }
+    
+    #status:not(:empty) {
+      border-left: 5px solid var(--primary-pink);
+      animation: slideIn 0.5s ease-out;
+    }
+    
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translateY(-10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    
+    button[type="submit"] {
+      position: relative;
+      overflow: hidden;
+      background-color: var(--primary-color);
+      color: white;
+      padding: 16px 20px;
+      border: none;
+      border-radius: var(--border-radius);
+      cursor: pointer;
+      font-weight: bold;
+      font-size: var(--font-size-lg);
+      transition: all 0.3s ease;
+      margin-top: var(--spacing-md);
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+      z-index: 1;
+    }
+    
+    button[type="submit"]:hover {
+      background-color: var(--primary-light);
+    }
+    
+    button[type="submit"]:active {
+      background-color: var(--primary-dark);
+      transform: translateY(1px);
+    }
+    
+    @media (min-width: 768px) {
+      main {
+        padding: var(--spacing-lg);
+        max-width: 600px;
+        margin: 0 auto;
+      }
+      
+      .time-select-container {
+        flex-direction: row;
+        gap: var(--spacing-sm);
+      }
+    }
+    
+    #installBanner {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: linear-gradient(45deg, var(--primary-color), var(--primary-pink));
+      border-top: 2px solid rgba(255, 255, 255, 0.3);
+      color: white;
+      padding: var(--spacing-md);
+      display: none;
+      align-items: center;
+      justify-content: space-between;
+      z-index: 1001;
+    }
+    
+    #installButton {
+      background-color: white;
+      color: var(--primary-color);
+      border: none;
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-weight: bold;
+    }
+    
+    #dismissInstall {
+      background: none;
+      border: none;
+      color: white;
+      font-size: 20px;
+    }
+    
+    .loading-indicator {
+      display: none;
+      text-align: center;
+      margin-top: var(--spacing-md);
+    }
+    
+    .loading-indicator.active {
+      display: block;
+    }
+    
+    .spinner {
+      width: 40px;
+      height: 40px;
+      margin: 0 auto;
+      border: 4px solid rgba(76,175,80,0.2);
+      border-top-color: var(--primary-color);
+      border-radius: 50%;
+      animation: spin 1s infinite linear;
+    }
+    
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    
+    /* Layout principal avec le tutoriel */
+    .app-container {
+      display: flex;
+      flex-direction: row;
+      width: 100%;
+      min-height: 100vh;
+    }
+    
+    .main-content {
+      flex: 1;
+      padding: var(--spacing-md);
+      max-width: 100%;
+    }
+    
+    /* Panneau tutoriel */
+    .tutorial-panel {
+      width: 320px;
+      background: linear-gradient(135deg, var(--primary-pink) 0%, var(--primary-color) 100%);
+      color: white;
+      padding: var(--spacing-lg);
+      overflow-y: auto;
+      box-shadow: -5px 0 20px rgba(0,0,0,0.15);
+      display: flex;
+      flex-direction: column;
+      gap: var(--spacing-md);
+      position: relative;
+    }
+    
+    /* Pour le responsive */
+    @media (max-width: 1024px) {
+      .app-container {
+        flex-direction: column;
+      }
+      
+      .tutorial-panel {
+        width: 100%;
+        order: 2;
+      }
+      
+      .tutorial-mobile-toggle {
+        display: block;
+      }
+    }
+    
+    .tutorial-mobile-toggle {
+      display: none;
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      background: linear-gradient(45deg, var(--primary-color), var(--primary-pink));
+      color: white;
+      border: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+      z-index: 1000;
+      cursor: pointer;
+      animation: pulse-light 2s infinite;
+    }
+    
+    @keyframes pulse-light {
+      0% { box-shadow: 0 0 0 0 rgba(255, 0, 170, 0.4); }
+      70% { box-shadow: 0 0 0 10px rgba(255, 0, 170, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(255, 0, 170, 0); }
+    }
+    
+    .tutorial-section {
+      background-color: rgba(255,255,255,0.15);
+      border-radius: 12px;
+      padding: var(--spacing-md);
+      backdrop-filter: blur(5px);
+      border: 1px solid rgba(255,255,255,0.3);
+    }
+    
+    .tutorial-section h3 {
+      font-family: 'Staatliches', cursive;
+      color: var(--primary-yellow);
+      margin-top: 0;
+      text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+    }
+    
+    .tutorial-section p {
+      color: white;
+      font-size: 14px;
+      line-height: 1.5;
+    }
+    
+    .tutorial-step {
+      display: flex;
+      margin-bottom: 12px;
+      align-items: flex-start;
+    }
+    
+    .step-number {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background-color: var(--primary-yellow);
+      color: black;
+      font-weight: bold;
+      margin-right: 10px;
+      flex-shrink: 0;
+    }
+    
+    .tutorial-list {
+      margin-left: 15px;
+      padding-left: 10px;
+    }
+    
+    .tutorial-list li {
+      margin-bottom: 8px;
+    }
+    
+    /* Système d'infobulles */
+    .info-tooltip {
+      position: relative;
+      display: inline-block;
+      margin-left: 5px;
+      cursor: help;
+    }
+    
+    .info-icon {
+      width: 18px;
+      height: 18px;
+      background-color: var(--primary-yellow);
+      color: black;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: bold;
+    }
+    
+    .tooltip-content {
+      visibility: hidden;
+      width: 200px;
+      background: linear-gradient(135deg, var(--primary-color), var(--primary-pink));
+      color: white;
+      text-align: center;
+      border-radius: 10px;
+      padding: 12px;
+      position: absolute;
+      z-index: 100;
+      bottom: 125%;
+      left: 50%;
+      transform: translateX(-50%) scale(0.8);
+      opacity: 0;
+      transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+      box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+      pointer-events: none;
+      font-size: 13px;
+    }
+    
+    .tooltip-content::after {
+      content: "";
+      position: absolute;
+      top: 100%;
+      left: 50%;
+      margin-left: -8px;
+      border-width: 8px;
+      border-style: solid;
+      border-color: var(--primary-pink) transparent transparent transparent;
+    }
+    
+    .info-tooltip:hover .tooltip-content {
+      visibility: visible;
+      opacity: 1;
+      transform: translateX(-50%) scale(1);
+    }
+    
+    /* Badges pour les nouvelles fonctionnalités */
+    .new-badge {
+      background-color: var(--primary-yellow);
+      color: black;
+      font-size: 10px;
+      padding: 2px 5px;
+      border-radius: 10px;
+      margin-left: 5px;
+      font-weight: bold;
+      vertical-align: top;
+      animation: bounce 2s infinite;
+    }
+    
+    @keyframes bounce {
+      0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+      40% { transform: translateY(-5px); }
+      60% { transform: translateY(-3px); }
+    }
+    
+    /* Highlight pour les éléments importants */
+    .highlight-container {
+      position: relative;
+    }
+    
+    .highlight-effect {
+      position: absolute;
+      top: -5px;
+      right: -5px;
+      bottom: -5px;
+      left: -5px;
+      border: 2px dashed var(--primary-yellow);
+      border-radius: var(--border-radius);
+      pointer-events: none;
+      animation: rotating 8s linear infinite;
+      opacity: 0;
+    }
+    
+    @keyframes rotating {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+    
+    .multi-date-hours {
+      display: flex;
+      gap: 5px;
+      margin: 8px 0;
+    }
+    
+    .mini-select {
+      flex: 1;
+      padding: 8px;
+      font-size: 12px;
+      min-width: 0;
+    }
+    
+    .scheduled-dates-list {
+      list-style: none;
+      padding-left: 0;
+      margin: 1rem 0;
+    }
+    
+    .scheduled-dates-list li {
+      margin-bottom: 0.5rem;
+      padding: 0.5rem;
+      background-color: rgba(0, 180, 255, 0.1);
+      border-radius: 5px;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>AUTOPADEL</h1>
+  </header>
+  
+  <div class="app-container">
+    <main class="main-content">
+      <form id="configForm">
+        <div class="form-group">
+          <label for="username">ADRESSE EMAIL</label>
+          <input type="email" id="username" name="username" required placeholder="exemple@domaine.com" autocomplete="username">
+        </div>
+        <div class="form-group">
+          <label for="password">MOT DE PASSE</label>
+          <input type="password" id="password" name="password" required placeholder="Votre mot de passe" autocomplete="current-password">
+        </div>
+        <div class="form-group">
+          <label for="preferredCourt">
+            TERRAIN PRÉFÉRÉ
+            <span class="info-tooltip">
+              <span class="info-icon">i</span>
+              <span class="tooltip-content">Le script favorisera ce terrain lors des réservations. Si non disponible, il choisira un autre terrain.</span>
+            </span>
+          </label>
+          <select id="preferredCourt" name="preferredCourt" required>
+            <option value="1455">ADN Family</option>
+            <option value="1456">Agence Donibane</option>
+            <option value="1692">AU P'TIT DOLMEN crêperie</option>
+            <option value="2164">Médiaclinic</option>
+          </select>
+        </div>
+        <div class="form-group reservation-date-block">
+          <label>MÉTHODE DE RÉSERVATION</label>
+          <div class="date-selection-method">
+            <div class="date-option active-option" id="specificDateOption">
+              <label>Date unique</label>
+              <div class="date-input-container">
+                <input type="date" id="reservationDate" name="reservationDate">
+                <span class="date-info">Le script se lancera automatiquement 7 jours avant cette date à minuit</span>
+              </div>
+            </div>
+            <div class="date-option" id="multipleDatesOption">
+              <label>Dates multiples <span class="new-badge">AMÉLIORÉ</span></label>
+              <div class="dates-input-container">
+                <div id="selectedDates" class="selected-dates-container">
+                  <!-- Dates sélectionnées seront affichées ici -->
+                </div>
+                <div class="date-add-container">
+                  <input type="date" id="multiDateInput" name="multiDateInput">
+                  <div class="multi-date-hours">
+                    <select id="multiDateHour1" class="mini-select">
+                      <option value="">1er horaire</option>
+                      <!-- Options d'heures générées par JS -->
+                    </select>
+                    <select id="multiDateHour2" class="mini-select">
+                      <option value="">2ème (opt.)</option>
+                      <!-- Options d'heures générées par JS -->
+                    </select>
+                    <select id="multiDateHour3" class="mini-select">
+                      <option value="">3ème (opt.)</option>
+                      <!-- Options d'heures générées par JS -->
+                    </select>
+                  </div>
+                  <button type="button" id="addDateBtn" class="btn-add-date">+</button>
+                </div>
+                <span class="date-info">Chaque réservation sera lancée automatiquement 7 jours avant la date respective à minuit</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="form-group" id="generalHoursGroup">
+          <label>
+            HORAIRES PRÉFÉRÉS
+            <span class="info-tooltip">
+              <span class="info-icon">i</span>
+              <span class="tooltip-content">L'ordre est important! Le 1er créneau est prioritaire sur les suivants. Ces horaires s'appliquent pour les dates uniques.</span>
+            </span>
+          </label>
+          <div class="time-select-container">
+            <select id="preferredHour1" name="preferredHour1" required>
+              <option value="09:00">09:00</option>
+              <option value="09:30">09:30</option>
+              <option value="10:00">10:00</option>
+              <option value="10:30">10:30</option>
+              <option value="11:00">11:00</option>
+              <option value="11:30">11:30</option>
+              <option value="12:00">12:00</option>
+              <option value="12:30">12:30</option>
+              <option value="13:00">13:00</option>
+              <option value="13:30">13:30</option>
+              <option value="14:00" selected>14:00</option>
+              <option value="14:30">14:30</option>
+              <option value="15:00">15:00</option>
+              <option value="15:30">15:30</option>
+              <option value="16:00">16:00</option>
+              <option value="16:30">16:30</option>
+              <option value="17:00">17:00</option>
+              <option value="17:30">17:30</option>
+              <option value="18:00">18:00</option>
+              <option value="18:30">18:30</option>
+              <option value="19:00">19:00</option>
+              <option value="19:30">19:30</option>
+              <option value="20:00">20:00</option>
+              <option value="20:30">20:30</option>
+              <option value="21:00">21:00</option>
+            </select>
+            
+            <select id="preferredHour2" name="preferredHour2" required>
+              <option value="">-- Optionnel --</option>
+              <option value="09:00">09:00</option>
+              <option value="09:30">09:30</option>
+              <option value="10:00">10:00</option>
+              <option value="10:30">10:30</option>
+              <option value="11:00">11:00</option>
+              <option value="11:30">11:30</option>
+              <option value="12:00">12:00</option>
+              <option value="12:30">12:30</option>
+              <option value="13:00">13:00</option>
+              <option value="13:30">13:30</option>
+              <option value="14:00">14:00</option>
+              <option value="14:30" selected>14:30</option>
+              <option value="15:00">15:00</option>
+              <option value="15:30">15:30</option>
+              <option value="16:00">16:00</option>
+              <option value="16:30">16:30</option>
+              <option value="17:00">17:00</option>
+              <option value="17:30">17:30</option>
+              <option value="18:00">18:00</option>
+              <option value="18:30">18:30</option>
+              <option value="19:00">19:00</option>
+              <option value="19:30">19:30</option>
+              <option value="20:00">20:00</option>
+              <option value="20:30">20:30</option>
+              <option value="21:00">21:00</option>
+            </select>
+            
+            <select id="preferredHour3" name="preferredHour3">
+              <option value="">-- Optionnel --</option>
+              <option value="09:00">09:00</option>
+              <option value="09:30">09:30</option>
+              <option value="10:00">10:00</option>
+              <option value="10:30">10:30</option>
+              <option value="11:00">11:00</option>
+              <option value="11:30">11:30</option>
+              <option value="12:00">12:00</option>
+              <option value="12:30">12:30</option>
+              <option value="13:00">13:00</option>
+              <option value="13:30">13:30</option>
+              <option value="14:00">14:00</option>
+              <option value="14:30">14:30</option>
+              <option value="15:00" selected>15:00</option>
+              <option value="15:30">15:30</option>
+              <option value="16:00">16:00</option>
+              <option value="16:30">16:30</option>
+              <option value="17:00">17:00</option>
+              <option value="17:30">17:30</option>
+              <option value="18:00">18:00</option>
+              <option value="18:30">18:30</option>
+              <option value="19:00">19:00</option>
+              <option value="19:30">19:30</option>
+              <option value="20:00">20:00</option>
+              <option value="20:30">20:30</option>
+              <option value="21:00">21:00</option>
+            </select>
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <label>
+            <input type="checkbox" id="testMode" name="testMode">
+            MODE TEST DE RÉSERVATION
+          </label>
+        </div>
+        <button type="submit">LANCER L'AUTOLOGIN</button>
+      </form>
+
+      <div id="status"></div>
+      
+      <div class="loading-indicator" id="loadingIndicator">
+        <div class="spinner"></div>
+        <p>Traitement en cours...</p>
+      </div>
+    </main>
+    
+    <aside class="tutorial-panel" id="tutorialPanel">
+      <h2>GUIDE RAPIDE</h2>
+      
+      <div class="tutorial-section">
+        <h3>ORDRE DE PRIORITÉ</h3>
+        <p>Le système cherche la meilleure combinaison possible selon cet ordre:</p>
+        <div class="tutorial-step">
+          <div class="step-number">1</div>
+          <div>Horaire préféré même si pas sur le terrain préféré</div>
+        </div>
+        <div class="tutorial-step">
+          <div class="step-number">2</div>
+          <div>À horaire égal, le terrain préféré sera choisi</div>
+        </div>
+        <div class="tutorial-step">
+          <div class="step-number">3</div>
+          <div>Si aucun horaire préféré n'est disponible, le terrain préféré sera privilégié</div>
+        </div>
+      </div>
+      
+      <div class="tutorial-section">
+        <h3>HORAIRES MULTIPLES</h3>
+        <p>Vous pouvez spécifier jusqu'à 3 créneaux horaires par ordre de préférence:</p>
+        <ul class="tutorial-list">
+          <li><strong>Horaire 1:</strong> Priorité maximale</li>
+          <li><strong>Horaire 2:</strong> Seconde option si le 1er n'est pas disponible</li>
+          <li><strong>Horaire 3:</strong> Dernière alternative</li>
+        </ul>
+        <p>Le script essaiera d'abord de réserver le premier horaire, puis les suivants si nécessaire.</p>
+      </div>
+      
+      <div class="tutorial-section">
+        <h3>DATES MULTIPLES <span class="new-badge">AMÉLIORÉ</span></h3>
+        <p>Programmez plusieurs dates de réservation avec des horaires spécifiques:</p>
+        <ol class="tutorial-list">
+          <li>Sélectionnez l'option "Dates multiples"</li>
+          <li>Choisissez une date dans le calendrier</li>
+          <li>Sélectionnez 1 à 3 horaires préférés pour cette date</li>
+          <li>Cliquez sur le bouton "+" pour ajouter cette date et ses horaires</li>
+          <li>Répétez pour ajouter d'autres dates</li>
+        </ol>
+        <p>Le système planifiera automatiquement toutes les réservations 7 jours à l'avance à minuit.</p>
+      </div>
+      
+      <div class="tutorial-section">
+        <h3>MODE TEST</h3>
+        <p>Cochez l'option "MODE TEST" pour simuler le processus de réservation sans effectuer de réservation réelle. Idéal pour vérifier vos paramètres!</p>
+      </div>
+      
+      <div class="tutorial-section">
+        <h3>ASTUCES</h3>
+        <ul class="tutorial-list">
+          <li>Sélectionnez plusieurs horaires pour augmenter vos chances d'obtenir un créneau</li>
+          <li>Le système se déclenche à minuit, 7 jours avant la date choisie</li>
+          <li>Si plusieurs personnes utilisent le script, la première personne à réserver obtiendra le créneau</li>
+        </ul>
+      </div>
+    </aside>
+    
+    <button class="tutorial-mobile-toggle" id="tutorialToggle">
+      <i class="fas fa-question"></i>
+    </button>
+  </div>
+  
+  <div id="installBanner">
+    <span>Installer l'application sur votre appareil</span>
+    <div>
+      <button id="installButton">Installer</button>
+      <button id="dismissInstall">&times;</button>
+    </div>
+  </div>
+
+  <script>
+    let multipleDatesArray = [];
+    let deferredPrompt;
+
+    document.addEventListener('DOMContentLoaded', function() {
+      const specificOption = document.getElementById('specificDateOption');
+      const multipleOption = document.getElementById('multipleDatesOption');
+      const reservationDateInput = document.getElementById('reservationDate');
+      const multiDateInput = document.getElementById('multiDateInput');
+      const addDateBtn = document.getElementById('addDateBtn');
+      const selectedDatesContainer = document.getElementById('selectedDates');
+      const generalHoursGroup = document.getElementById('generalHoursGroup');
+      
+      // Définir date minimale à aujourd'hui
+      const today = new Date();
+      const formattedToday = today.toISOString().split('T')[0];
+      reservationDateInput.min = formattedToday;
+      multiDateInput.min = formattedToday;
+      
+      // Définir date par défaut à J+7
+      const defaultDate = new Date();
+      defaultDate.setDate(defaultDate.getDate() + 7);
+      reservationDateInput.value = defaultDate.toISOString().split('T')[0];
+      
+      // Générer les options d'heures pour les sélecteurs d'heure de dates multiples
+      const hours = generateHourOptions();
+      const hourSelects = ['multiDateHour1', 'multiDateHour2', 'multiDateHour3'];
+      hourSelects.forEach((selectId, index) => {
+        const select = document.getElementById(selectId);
+        hours.forEach(hour => {
+          const option = document.createElement('option');
+          option.value = hour;
+          option.textContent = hour;
+          select.appendChild(option);
+        });
+        
+        // Pré-sélectionner les valeurs par défaut
+        if (index === 0) select.value = "14:00";
+        if (index === 1) select.value = "14:30";
+        if (index === 2) select.value = "15:00";
+      });
+      
+      function generateHourOptions() {
+        const hours = [];
+        for (let h = 9; h <= 21; h++) {
+          hours.push(`${h.toString().padStart(2, '0')}:00`);
+          if (h < 21) hours.push(`${h.toString().padStart(2, '0')}:30`);
+        }
+        return hours;
+      }
+      
+      function addDateToList(dateStr) {
+        // Vérifier si la date existe déjà
+        const existingDateIndex = multipleDatesArray.findIndex(item => item.date === dateStr);
+        if (existingDateIndex !== -1) {
+          alert('Cette date a déjà été ajoutée');
+          return;
+        }
+        
+        // Récupérer les heures sélectionnées (filtrer les valeurs vides)
+        const hours = [
+          document.getElementById('multiDateHour1').value,
+          document.getElementById('multiDateHour2').value,
+          document.getElementById('multiDateHour3').value
+        ].filter(hour => hour !== '');
+        
+        if (hours.length === 0) {
+          alert('Veuillez sélectionner au moins un horaire');
+          return;
+        }
+        
+        // Créer l'objet date avec ses horaires
+        multipleDatesArray.push({
+          date: dateStr,
+          hours: hours
+        });
+        
+        // Trier le tableau par date
+        multipleDatesArray.sort((a, b) => a.date.localeCompare(b.date));
+        
+        // Mettre à jour l'affichage
+        updateSelectedDates();
+        multiDateInput.value = '';
+      }
+      
+      function updateSelectedDates() {
+        selectedDatesContainer.innerHTML = '';
+        
+        if (multipleDatesArray.length === 0) {
+          selectedDatesContainer.innerHTML = '<p class="empty-dates">Aucune date sélectionnée</p>';
+          return;
+        }
+        
+        multipleDatesArray.forEach((dateItem, index) => {
+          const dateTag = document.createElement('div');
+          dateTag.className = 'date-tag';
+          
+          const displayDate = new Date(dateItem.date);
+          const formattedDate = `${displayDate.getDate().toString().padStart(2, '0')}/${(displayDate.getMonth()+1).toString().padStart(2, '0')}/${displayDate.getFullYear()}`;
+          
+          const hoursHtml = dateItem.hours.map(hour => 
+            `<span class="hour-chip">${hour}</span>`
+          ).join('');
+          
+          dateTag.innerHTML = `
+            <div class="date-tag-header">
+              <span>${formattedDate}</span>
+              <button type="button" data-index="${index}" class="remove-date">&times;</button>
+            </div>
+            <div class="date-tag-hours">
+              ${hoursHtml}
+            </div>
+          `;
+          
+          selectedDatesContainer.appendChild(dateTag);
+          
+          dateTag.querySelector('.remove-date').addEventListener('click', function() {
+            const idx = parseInt(this.getAttribute('data-index'));
+            multipleDatesArray.splice(idx, 1);
+            updateSelectedDates();
+          });
+        });
+      }
+      
+      addDateBtn.addEventListener('click', function() {
+        const dateValue = multiDateInput.value;
+        if (dateValue) {
+          addDateToList(dateValue);
+        }
+      });
+      
+      updateSelectedDates();
+      
+      // Remplacez la gestion radio par :
+      const dateOptions = document.querySelectorAll('.date-option');
+      dateOptions.forEach(option => {
+        option.addEventListener('click', function(e) {
+          if (e.target.tagName === 'BUTTON' || e.target.tagName === 'SELECT' || e.target.tagName === 'INPUT') {
+            return;
+          }
+          dateOptions.forEach(opt => opt.classList.remove('active-option'));
+          option.classList.add('active-option');
+          updateDateOptionsVisibility();
+        });
+      });
+
+      function updateDateOptionsVisibility() {
+        const isSpecificSelected = specificOption.classList.contains('active-option');
+        const isMultipleSelected = multipleOption.classList.contains('active-option');
+        reservationDateInput.disabled = !isSpecificSelected;
+        multiDateInput.disabled = !isMultipleSelected;
+        addDateBtn.disabled = !isMultipleSelected;
+        document.querySelectorAll('.multi-date-hours select').forEach(select => {
+          select.disabled = !isMultipleSelected;
+        });
+        generalHoursGroup.style.display = isSpecificSelected ? 'block' : 'none';
+      }
+      
+      window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault();
+        deferredPrompt = e;
+        document.getElementById('installBanner').style.display = 'flex';
+      });
+
+      document.getElementById('installButton').addEventListener('click', () => {
+        document.getElementById('installBanner').style.display = 'none';
+        deferredPrompt.prompt();
+        deferredPrompt.userChoice.then((choiceResult) => {
+          if (choiceResult.outcome === 'accepted') {
+            console.log('Utilisateur a accepté l\'installation');
+          } else {
+            console.log('Utilisateur a refusé l\'installation');
+          }
+          deferredPrompt = null;
+        });
+      });
+
+      document.getElementById('dismissInstall').addEventListener('click', () => {
+        document.getElementById('installBanner').style.display = 'none';
+      });
+
+      document.querySelectorAll('button').forEach(button => {
+        button.addEventListener('click', function() {
+          this.style.transform = 'scale(0.95)';
+          setTimeout(() => {
+            this.style.transform = '';
+          }, 150);
+        });
+      });
+
+      const tutorialToggle = document.getElementById('tutorialToggle');
+      const tutorialPanel = document.getElementById('tutorialPanel');
+      
+      if (tutorialToggle && tutorialPanel) {
+        tutorialToggle.addEventListener('click', () => {
+          if (window.innerWidth <= 1024) {
+            if (tutorialPanel.style.display === 'none') {
+              tutorialPanel.style.display = 'flex';
+              tutorialToggle.innerHTML = '<i class="fas fa-times"></i>';
+            } else {
+              tutorialPanel.style.display = 'none';
+              tutorialToggle.innerHTML = '<i class="fas fa-question"></i>';
+            }
+          }
+        });
+        
+        if (window.innerWidth <= 1024) {
+          tutorialPanel.style.display = 'none';
+        }
+        
+        window.addEventListener('resize', () => {
+          if (window.innerWidth > 1024) {
+            tutorialPanel.style.display = 'flex';
+          } else {
+            tutorialPanel.style.display = 'none';
+            tutorialToggle.innerHTML = '<i class="fas fa-question"></i>';
+          }
+        });
+      }
+      
+      const addHighlightEffect = (triggerSelector, targetSelector) => {
+        const trigger = document.querySelector(triggerSelector);
+        const target = document.querySelector(targetSelector);
+        
+        if (trigger && target) {
+          if (!target.classList.contains('highlight-container')) {
+            target.classList.add('highlight-container');
+            
+            const highlightEffect = document.createElement('div');
+            highlightEffect.classList.add('highlight-effect');
+            target.appendChild(highlightEffect);
+            
+            trigger.addEventListener('mouseenter', () => {
+              highlightEffect.style.opacity = '1';
+            });
+            
+            trigger.addEventListener('mouseleave', () => {
+              highlightEffect.style.opacity = '0';
+            });
+          }
+        }
+      };
+      
+      addHighlightEffect('.tutorial-section:nth-child(2)', '.time-select-container');
+      addHighlightEffect('.tutorial-section:nth-child(3)', '.date-selection-method');
+      addHighlightEffect('.tutorial-section:nth-child(4)', '#testMode');
+    });
+
+    document.getElementById('configForm').addEventListener('submit', function(event) {
+      event.preventDefault();
+      try {
+        document.getElementById('loadingIndicator').classList.add('active');
+        document.getElementById('status').textContent = "";
+
+        const specificOption = document.getElementById('specificDateOption');
+        const multipleOption = document.getElementById('multipleDatesOption');
+
+        const data = {
+          username: document.getElementById('username').value,
+          password: document.getElementById('password').value,
+          preferredCourt: document.getElementById('preferredCourt').value,
+          dateMethod: specificOption.classList.contains('active-option') ? 'specific' : 'multiple',
+          reservationDate: specificOption.classList.contains('active-option') ? document.getElementById('reservationDate').value : "",
+          multipleDates: multipleOption.classList.contains('active-option') ? multipleDatesArray : [],
+          preferredHour1: document.getElementById('preferredHour1').value,
+          preferredHour2: document.getElementById('preferredHour2').value,
+          preferredHour3: document.getElementById('preferredHour3').value,
+          testMode: document.getElementById('testMode').checked
+        };
+
+        console.log("Formulaire soumis - Données à envoyer:", { 
+          ...data, 
+          password: '******'
+        });
+
+        fetch('/favicon.ico')
+          .then(response => {
+            console.log("Test d'accès au serveur:", response.status);
+            
+            return fetch('/start', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(data)
+            });
+          })
+          .then(response => {
+            console.log("Réponse reçue du serveur:", response.status);
+            if (!response.ok) {
+              return response.text().then(text => {
+                try {
+                  const errorData = JSON.parse(text);
+                  throw new Error(errorData.message || `Erreur HTTP: ${response.status}`);
+                } catch (e) {
+                  throw new Error(`Erreur HTTP ${response.status}: ${text || 'Détails non disponibles'}`);
+                }
+              });
+            }
+            return response.json();
+          })
+          .then(result => {
+            console.log("Données reçues du serveur:", result);
+            
+            // Affichage amélioré avec dates formatées
+            let message = result.message;
+            
+            // Ajouter des détails sur les dates programmées si disponibles
+            if (result.scheduledDates && result.scheduledDates.length > 0) {
+              message += "<ul class='scheduled-dates-list'>";
+              result.scheduledDates.forEach(item => {
+                const dateObj = new Date(item.date);
+                const formattedDate = `${dateObj.getDate().toString().padStart(2, '0')}/${(dateObj.getMonth()+1).toString().padStart(2, '0')}/${dateObj.getFullYear()}`;
+                const exDate = new Date(item.executionDate);
+                message += `<li>Date: <strong>${formattedDate}</strong> - Exécution: ${exDate.toLocaleString()}</li>`;
+              });
+              message += "</ul>";
+            }
+            
+            document.getElementById('status').innerHTML = message;
+            document.getElementById('status').style.color = "green";
+            document.getElementById('loadingIndicator').classList.remove('active');
+          })
+          .catch(error => {
+            console.error('Erreur complète:', error);
+            document.getElementById('status').textContent = 'Une erreur est survenue: ' + error.message;
+            document.getElementById('status').style.color = "red";
+            document.getElementById('loadingIndicator').classList.remove('active');
+          });
+      } catch (formError) {
+        console.error('Erreur lors de la préparation des données:', formError);
+        document.getElementById('status').textContent = 'Erreur de préparation des données: ' + formError.message;
+        document.getElementById('status').style.color = "red";
+        document.getElementById('loadingIndicator').classList.remove('active');
+      }
+    });
+  </script>
+</body>
+</html>
