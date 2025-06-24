@@ -1,3 +1,4 @@
+rootDir: .
 services:
   - type: web
     name: autopadel
