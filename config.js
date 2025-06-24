@@ -4,11 +4,6 @@ export default {
   "memberUrl": "https://centralsportclub.gestion-sports.com/membre/",
   "username": "rocqueslio@gmail.com",
   "password": "q9cw!hK9BPFEWZd",
-  "hourPreferences": [
-    "11:00",
-    "13:00",
-    "15:00"
-  ],
   "useCourtPreferences": true,
   "courts": {
     "1455": "ADN Family",
@@ -37,6 +32,11 @@ export default {
     }
   ],
   "testMode": false,
-  "reservationDate": "2025-04-23",
+  "hourPreferences": [
+    "14:00",
+    "16:00",
+    "18:00"
+  ],
+  "reservationDate": "2025-06-28",
   "bookingAdvance": 0
 };

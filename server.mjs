@@ -148,89 +148,84 @@ app.post('/start', (req, res) => {
     else if (dateMethod === 'multiple' && Array.isArray(multipleDates) && multipleDates.length > 0) {
       // Option 2: Dates multiples avec horaires spécifiques
       const scheduledDates = [];
-      
-      // Trier les dates
       multipleDates.sort((a, b) => a.date.localeCompare(b.date));
-      
-      // Programmer une tâche pour chaque date
       multipleDates.forEach((dateItem) => {
         try {
           const dateStr = dateItem.date;
           const dateHours = Array.isArray(dateItem.hours) ? dateItem.hours : [];
-          
           if (!dateStr || dateHours.length === 0) {
             console.warn(`Date ${dateStr} ignorée: format incorrect ou horaires manquants`);
             return;
           }
-          
-          const targetDate = new Date(dateStr);
+          // Correction: conversion robuste de la date (YYYY-MM-DD ou DD/MM/YYYY)
+          let targetDate;
+          if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+            // Format YYYY-MM-DD
+            targetDate = new Date(dateStr);
+          } else if (/^\d{2}\/\d{2}\/\d{4}$/.test(dateStr)) {
+            // Format DD/MM/YYYY
+            const [d, m, y] = dateStr.split('/');
+            targetDate = new Date(`${y}-${m}-${d}`);
+          } else {
+            throw new Error('Format de date non reconnu: ' + dateStr);
+          }
+          // Ajout log de debug
+          console.log(`[DEBUG] dateStr: ${dateStr}, targetDate:`, targetDate, 'isNaN:', isNaN(targetDate.getTime()));
+          if (isNaN(targetDate.getTime())) {
+            throw new Error('Date invalide après parsing: ' + dateStr);
+          }
           // Calculer 7 jours avant
           const executionDate = new Date(targetDate);
           executionDate.setDate(executionDate.getDate() - 7);
-          executionDate.setHours(0, 1, 0, 0); // Minuit et 1 minute
-          
+          executionDate.setHours(0, 1, 0, 0);
           if (executionDate < new Date()) {
-            // Si la date d'exécution est déjà passée, ajuster à maintenant + 5 secondes
             executionDate.setTime(Date.now() + 5000);
           }
-          
           const configObject = {
             ...baseConfigObject,
             hourPreferences: dateHours,
             reservationDate: dateStr,
             bookingAdvance: 0
           };
-          
           // Générer un nom de fichier unique basé sur la date
           const configFileName = `config_${dateStr.replace(/-/g, '')}.js`;
           const configPath = path.resolve(__dirname, configFileName);
-          const configContent = `// ${configFileName}
-export default ${JSON.stringify(configObject, null, 2)};`;
-          
+          const configContent = `// ${configFileName}\nexport default ${JSON.stringify(configObject, null, 2)};`;
           fs.writeFileSync(configPath, configContent, 'utf8');
-          
-          // Programmer l'exécution
-          const job = schedule.scheduleJob(executionDate, function() {
-            console.log(`Exécution planifiée pour ${dateStr} démarrée à ${new Date().toLocaleString()}`);
-            const child = spawn('node', [
-              path.resolve(__dirname, 'index.mjs'),
-              `--config=${configFileName}`
-            ], { 
-              stdio: 'inherit',
-              env: { ...process.env, NODE_PATH: process.cwd() }
-            });
-            child.on('close', (code) => {
-              console.log(`index.js pour ${dateStr} terminé avec le code ${code}`);
-              // Supprimer le fichier de configuration temporaire
-              try {
-                fs.unlinkSync(configPath);
-              } catch(e) {
-                console.log(`Erreur lors de la suppression du fichier ${configFileName}:`, e);
-              }
-            });
-          });
-          
           scheduledDates.push({
             date: dateStr,
             executionDate: executionDate.toLocaleString(),
             hours: dateHours
           });
-          
-          if (testMode && dateStr === multipleDates[0].date) {
-            // En mode test, lancer immédiatement uniquement pour la première date
+          // Correction: lancer le script pour CHAQUE date en mode test
+          if (testMode) {
             console.log(`Mode test activé, exécution immédiate pour ${dateStr} avec horaires ${dateHours.join(', ')}...`);
             const child = spawn('node', [
               path.resolve(__dirname, 'index.mjs'),
               `--config=${configFileName}`
-            ], { 
+            ], {
               stdio: 'inherit',
               env: { ...process.env, NODE_PATH: process.cwd() }
             });
             child.on('close', (code) => {
               console.log(`index.js (test) pour ${dateStr} terminé avec le code ${code}`);
             });
+          } else {
+            // Programmation avec node-schedule
+            const job = schedule.scheduleJob(executionDate, function() {
+              console.log(`Exécution planifiée pour ${dateStr} démarrée à ${new Date().toLocaleString()}`);
+              const child = spawn('node', [
+                path.resolve(__dirname, 'index.mjs'),
+                `--config=${configFileName}`
+              ], {
+                stdio: 'inherit',
+                env: { ...process.env, NODE_PATH: process.cwd() }
+              });
+              child.on('close', (code) => {
+                console.log(`index.js pour ${dateStr} terminé avec le code ${code}`);
+              });
+            });
           }
-          
         } catch(e) {
           console.error(`Erreur lors du traitement de la date ${dateItem.date}:`, e);
         }
@@ -246,8 +241,7 @@ export default ${JSON.stringify(configObject, null, 2)};`;
       };
       
       const configPath = path.resolve(__dirname, 'config.js');
-      const configContent = `// config.js
-export default ${JSON.stringify(configObject, null, 2)};`;
+      const configContent = `// config.js\nexport default ${JSON.stringify(configObject, null, 2)};`;
       fs.writeFileSync(configPath, configContent, 'utf8');
       
       let message = "";

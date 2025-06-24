@@ -5,6 +5,7 @@
   <title>AUTOPADEL - Configuration</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="theme-color" content="#00B4FF">
   <link rel="stylesheet" href="assets/css/style.css">
@@ -159,6 +160,9 @@
     }
     
     .btn-add-date {
+      display: flex;
+      align-items: center;
+      gap: 8px;
       padding: 12px var(--spacing-md);
       background-color: var(--primary-color);
       color: white;
@@ -166,7 +170,28 @@
       border-radius: var(--border-radius);
       font-size: var(--font-size-normal);
       cursor: pointer;
-      min-width: 80px;
+      min-width: 140px;
+      font-weight: 600;
+      transition: background 0.2s, box-shadow 0.2s;
+      box-shadow: 0 2px 8px rgba(0,180,255,0.08);
+    }
+    .btn-add-date:hover {
+      background-color: var(--primary-dark);
+      box-shadow: 0 4px 12px rgba(0,180,255,0.15);
+    }
+    .btn-add-date-icon {
+      font-size: 20px;
+      font-weight: bold;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .btn-add-date-label {
+      font-size: 15px;
+      font-weight: 500;
+      letter-spacing: 0.5px;
+      display: flex;
+      align-items: center;
     }
     
     .selected-dates-container {
@@ -235,25 +260,42 @@
     input[type="checkbox"] {
       position: relative;
       cursor: pointer;
-      width: 20px;
-      height: 20px;
+      width: 22px;
+      height: 22px;
       margin-right: 10px;
+      appearance: none;
+      -webkit-appearance: none;
+      background: #fff;
+      border: 2px solid var(--primary-color);
+      border-radius: 6px;
+      outline: none;
+      transition: border-color 0.2s;
+      box-shadow: none;
+      display: inline-block;
+      vertical-align: middle;
     }
-    
     input[type="checkbox"]:checked {
-      animation: pulse 0.3s;
+      border-color: var(--primary-pink);
+      background: #fff;
     }
-    
-    @keyframes pulse {
-      0% {
-        transform: scale(1);
-      }
-      50% {
-        transform: scale(1.2);
-      }
-      100% {
-        transform: scale(1);
-      }
+    input[type="checkbox"]:checked::after {
+      content: '\2716'; /* Unicode heavy X */
+      color: var(--primary-pink);
+      font-size: 18px;
+      position: absolute;
+      left: 2px;
+      top: 0px;
+      width: 18px;
+      height: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      pointer-events: none;
+    }
+    input[type="checkbox"]:focus {
+      border-color: var(--primary-pink);
+      box-shadow: 0 0 0 2px #ffd6f6;
     }
     
     #status {
@@ -640,6 +682,10 @@
         <div class="form-group">
           <label for="password">MOT DE PASSE</label>
           <input type="password" id="password" name="password" required placeholder="Votre mot de passe" autocomplete="current-password">
+          <div style="margin-top:8px; display:flex; align-items:center; gap:8px;">
+            <input type="checkbox" id="rememberCredentials" name="rememberCredentials" style="width:18px; height:18px;">
+            <label for="rememberCredentials" style="font-weight:normal; font-size:15px; margin:0;">Mémoriser les identifiants</label>
+          </div>
         </div>
         <div class="form-group">
           <label for="preferredCourt">
@@ -662,7 +708,7 @@
             <div class="date-option active-option" id="specificDateOption">
               <label>Date unique</label>
               <div class="date-input-container">
-                <input type="date" id="reservationDate" name="reservationDate">
+                <input type="date" id="reservationDate" name="reservationDate" autocomplete="off">
                 <span class="date-info">Le script se lancera automatiquement 7 jours avant cette date à minuit</span>
               </div>
             </div>
@@ -673,7 +719,7 @@
                   <!-- Dates sélectionnées seront affichées ici -->
                 </div>
                 <div class="date-add-container">
-                  <input type="date" id="multiDateInput" name="multiDateInput">
+                  <input type="date" id="multiDateInput" name="multiDateInput" autocomplete="off">
                   <div class="multi-date-hours">
                     <select id="multiDateHour1" class="mini-select">
                       <option value="">1er horaire</option>
@@ -688,7 +734,10 @@
                       <!-- Options d'heures générées par JS -->
                     </select>
                   </div>
-                  <button type="button" id="addDateBtn" class="btn-add-date">+</button>
+                  <button type="button" id="addDateBtn" class="btn-add-date">
+                    <span class="btn-add-date-icon">+</span>
+                    <span class="btn-add-date-label">Ajouter la sélection</span>
+                  </button>
                 </div>
                 <span class="date-info">Chaque réservation sera lancée automatiquement 7 jours avant la date respective à minuit</span>
               </div>
@@ -707,87 +756,51 @@
           <div class="time-select-container">
             <select id="preferredHour1" name="preferredHour1" required>
               <option value="09:00">09:00</option>
-              <option value="09:30">09:30</option>
               <option value="10:00">10:00</option>
-              <option value="10:30">10:30</option>
               <option value="11:00">11:00</option>
-              <option value="11:30">11:30</option>
               <option value="12:00">12:00</option>
-              <option value="12:30">12:30</option>
               <option value="13:00">13:00</option>
-              <option value="13:30">13:30</option>
               <option value="14:00" selected>14:00</option>
-              <option value="14:30">14:30</option>
               <option value="15:00">15:00</option>
-              <option value="15:30">15:30</option>
               <option value="16:00">16:00</option>
-              <option value="16:30">16:30</option>
               <option value="17:00">17:00</option>
-              <option value="17:30">17:30</option>
               <option value="18:00">18:00</option>
-              <option value="18:30">18:30</option>
               <option value="19:00">19:00</option>
-              <option value="19:30">19:30</option>
               <option value="20:00">20:00</option>
-              <option value="20:30">20:30</option>
               <option value="21:00">21:00</option>
             </select>
             
             <select id="preferredHour2" name="preferredHour2" required>
               <option value="">-- Optionnel --</option>
               <option value="09:00">09:00</option>
-              <option value="09:30">09:30</option>
               <option value="10:00">10:00</option>
-              <option value="10:30">10:30</option>
               <option value="11:00">11:00</option>
-              <option value="11:30">11:30</option>
               <option value="12:00">12:00</option>
-              <option value="12:30">12:30</option>
               <option value="13:00">13:00</option>
-              <option value="13:30">13:30</option>
               <option value="14:00">14:00</option>
-              <option value="14:30" selected>14:30</option>
               <option value="15:00">15:00</option>
-              <option value="15:30">15:30</option>
-              <option value="16:00">16:00</option>
-              <option value="16:30">16:30</option>
+              <option value="16:00" selected>16:00</option>
               <option value="17:00">17:00</option>
-              <option value="17:30">17:30</option>
               <option value="18:00">18:00</option>
-              <option value="18:30">18:30</option>
               <option value="19:00">19:00</option>
-              <option value="19:30">19:30</option>
               <option value="20:00">20:00</option>
-              <option value="20:30">20:30</option>
               <option value="21:00">21:00</option>
             </select>
             
             <select id="preferredHour3" name="preferredHour3">
               <option value="">-- Optionnel --</option>
               <option value="09:00">09:00</option>
-              <option value="09:30">09:30</option>
               <option value="10:00">10:00</option>
-              <option value="10:30">10:30</option>
               <option value="11:00">11:00</option>
-              <option value="11:30">11:30</option>
               <option value="12:00">12:00</option>
-              <option value="12:30">12:30</option>
               <option value="13:00">13:00</option>
-              <option value="13:30">13:30</option>
               <option value="14:00">14:00</option>
-              <option value="14:30">14:30</option>
-              <option value="15:00" selected>15:00</option>
-              <option value="15:30">15:30</option>
+              <option value="15:00">15:00</option>
               <option value="16:00">16:00</option>
-              <option value="16:30">16:30</option>
               <option value="17:00">17:00</option>
-              <option value="17:30">17:30</option>
-              <option value="18:00">18:00</option>
-              <option value="18:30">18:30</option>
+              <option value="18:00" selected>18:00</option>
               <option value="19:00">19:00</option>
-              <option value="19:30">19:30</option>
               <option value="20:00">20:00</option>
-              <option value="20:30">20:30</option>
               <option value="21:00">21:00</option>
             </select>
           </div>
@@ -800,6 +813,10 @@
           </label>
         </div>
         <button type="submit">LANCER L'AUTOLOGIN</button>
+        <p style="margin-top:12px; color:#555; font-size:15px; text-align:center;">
+          Si la réservation est possible: vous recevrez une confirmation directement via l'application du club.<br>
+          Si vous ne recevez rien, aucun de vos horaires préférés ou aucun terrain n'est disponible.
+        </p>
       </form>
 
       <div id="status"></div>
@@ -925,12 +942,10 @@
       });
       
       function generateHourOptions() {
-        const hours = [];
-        for (let h = 9; h <= 21; h++) {
-          hours.push(`${h.toString().padStart(2, '0')}:00`);
-          if (h < 21) hours.push(`${h.toString().padStart(2, '0')}:30`);
-        }
-        return hours;
+        // Liste stricte des horaires autorisés (voir image)
+        return [
+          "09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00", "17:00", "18:00", "19:00", "20:00", "21:00"
+        ];
       }
       
       function addDateToList(dateStr) {
@@ -1128,6 +1143,40 @@
       addHighlightEffect('.tutorial-section:nth-child(2)', '.time-select-container');
       addHighlightEffect('.tutorial-section:nth-child(3)', '.date-selection-method');
       addHighlightEffect('.tutorial-section:nth-child(4)', '#testMode');
+      
+      // --- Amélioration UX : ouvrir le datepicker sur clic sur toute la case (corrigé pour ne cibler que les input de type date ET pas les selects horaires) ---
+      function makeDateInputClickable(containerSelector, inputSelector) {
+        const container = document.querySelector(containerSelector);
+        const input = document.querySelector(inputSelector);
+        if (container && input && input.type === 'date') {
+          container.style.cursor = 'pointer';
+          container.addEventListener('click', (e) => {
+            // Ne rien faire si le clic cible un select ou un bouton dans la div
+            if (e.target === input) return;
+            if (e.target.tagName === 'SELECT' || e.target.tagName === 'OPTION' || e.target.tagName === 'BUTTON') return;
+            input.focus();
+            if (typeof input.showPicker === 'function') {
+              input.showPicker();
+            }
+          });
+        }
+      }
+      // Pour la date unique
+      makeDateInputClickable('.date-input-container', '#reservationDate');
+      // Pour la date multi
+      makeDateInputClickable('.date-add-container', '#multiDateInput');
+      // --- Correction CSS pour que la flèche ne masque pas l'heure ---
+      const style = document.createElement('style');
+      style.innerHTML = `
+        select, .mini-select {
+          background-position: right 4px center !important;
+          padding-right: 2.2em !important;
+        }
+        .mini-select option, select option {
+          padding-right: 0 !important;
+        }
+      `;
+      document.head.appendChild(style);
     });
 
     document.getElementById('configForm').addEventListener('submit', function(event) {

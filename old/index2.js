@@ -94,11 +94,10 @@ function sleep(ms) {
     // 4. SÉLECTION DE L'HORAIRE (priorité : 14:00, 14:30, 15:00, 15:30, 16:00)
     // -------------------------------------------------------
     await page.waitForSelector('select#heure');
-    const selectedHour = await page.evaluate(() => {
-      const preferences = ['14:00', '14:30', '15:00', '15:30', '16:00']; // Ordre de priorité modifié
+    const selectedHour = await page.evaluate((hourPreferences) => {
       const select = document.getElementById('heure');
       let chosen = null;
-      for (let pref of preferences) {
+      for (let pref of hourPreferences) {
         const option = select.querySelector(`option[value="${pref}"]`);
         if (option && !option.disabled) {
           select.value = pref;
@@ -109,12 +108,13 @@ function sleep(ms) {
           break;
         }
       }
+      // Si aucun horaire préféré n'est disponible, ne rien sélectionner
       return chosen;
-    });
+    }, config.hourPreferences);
     if (!selectedHour) {
-      throw new Error("Aucun créneau horaire disponible parmi 14:00, 14:30, 15:00, 15:30, 16:00.");
+      throw new Error("Aucun créneau horaire disponible parmi les horaires préférés : " + config.hourPreferences.join(", "));
     }
-    console.log("Créneau horaire sélectionné :", selectedHour);
+    console.log("Créneau horaire sélectionné (préféré) :", selectedHour);
     await new Promise(resolve => setTimeout(resolve, 1000)); // Alternative à waitForTimeout
 
     // Attendre plus longtemps pour assurer le chargement des terrains

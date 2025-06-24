@@ -1,0 +1,2 @@
+# Ne jamais versionner ce fichier, il contient des secrets locaux
+.env

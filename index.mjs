@@ -19,6 +19,8 @@
 
 import puppeteer from 'puppeteer';
 import nodemailer from 'nodemailer';
+import fs from 'fs';
+import path from 'path';
 
 // Analyser les arguments de ligne de commande pour un fichier de configuration alternatif
 const args = process.argv.slice(2);
@@ -49,6 +51,21 @@ function sleep(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
+// Ajout d'une fonction pour écrire les logs dans un fichier log.txt
+function logToFile(type, message, details = null) {
+  const timestamp = new Date().toISOString().replace('T', ' ').substring(0, 19);
+  let logLine = `${timestamp} [${type.toUpperCase()}] ${message}`;
+  if (details) {
+    if (typeof details === 'object') {
+      logLine += '\n' + JSON.stringify(details, null, 2);
+    } else {
+      logLine += '\n' + details;
+    }
+  }
+  logLine += '\n';
+  fs.appendFileSync(path.resolve('./log.txt'), logLine, 'utf8');
+}
+
 // Fonction améliorée pour les logs
 
 function log(type, message, details = null) {
@@ -71,6 +88,22 @@ function log(type, message, details = null) {
       console.log('   ', details);
     }
   }
+  // Ajout log fichier
+  logToFile(type, message, details);
+}
+
+// Ajout d'une fonction pour déplacer les captures d'écran dans un dossier logs/ avec le même nom que le log
+import { renameSync, existsSync, mkdirSync } from 'fs';
+function moveScreenshotToLogs(filename) {
+  const logsDir = path.resolve('./logs');
+  if (!existsSync(logsDir)) mkdirSync(logsDir);
+  const dest = path.join(logsDir, filename);
+  try {
+    renameSync(filename, dest);
+    logToFile('info', `Capture d'écran déplacée dans logs/: ${dest}`);
+  } catch (e) {
+    logToFile('error', `Erreur lors du déplacement de la capture d'écran: ${e.message}`);
+  }
 }
 
 // Fonction pour capturer l'écran en cas d'erreur
@@ -81,6 +114,7 @@ async function captureScreenOnError(page, errorName) {
     const filename = `error_${errorName}_${timestamp}.png`;
     await page.screenshot({ path: filename, fullPage: true });
     log('info', `Capture d'écran sauvegardée: ${filename}`);
+    moveScreenshotToLogs(filename);
   } catch (e) {
     log('error', `Impossible de sauvegarder la capture d'écran: ${e.message}`);
   }
@@ -412,113 +446,101 @@ async function sendErrorEmail(errorMessage) {
     await sleep(3000);
 
     // =======================================================
-    // 5. SÉLECTION DU TERRAIN
+    // 5. SÉLECTION DU CRÉNEAU HORAIRE ET DU TERRAIN (LOGIQUE STRICTE)
     // =======================================================
-    log('step', "Sélection du terrain...");
-    log('info', `Vérification de la disponibilité des horaires préférés sur tous les terrains...`);
+    log('step', "Sélection du créneau horaire et du terrain selon la priorité stricte...");
     await sleep(3000);
-    
     const terrainInfo = await page.evaluate((params) => {
       const { courtPreferences, hourPreferences } = params;
       const availableCourts = [];
       const courtBlocks = document.querySelectorAll('.bloccourt');
-      console.log(`Nombre de blocs de terrains trouvés: ${courtBlocks.length}`);
-
-      // Si aucun terrain n'est trouvé, sortir
       if (courtBlocks.length === 0) return null;
-
-      // Collecter toutes les options disponibles
       courtBlocks.forEach((court) => {
         const courtId = court.getAttribute('data-idcourt');
         if (!courtId) return;
-        
+        const isPreferredCourt = courtPreferences.indexOf(courtId) !== -1;
         const buttons = court.querySelectorAll('.blocCourt_container_btn-creneau button.btn_creneau:not([disabled])');
         buttons.forEach(btn => {
           const hour = btn.textContent.trim();
-          
-          // Calculer les scores pour le tri
-          const hourScore = hourPreferences.indexOf(hour) !== -1 
-            ? hourPreferences.indexOf(hour)  // Position dans les préférences (0 = plus haute priorité)
-            : 999;                          // Non préféré
-            
-          const isPreferredCourt = courtPreferences.indexOf(courtId) !== -1;
-          // Score du terrain (0 si préféré, 1 sinon)
-          const courtScore = isPreferredCourt ? 0 : 1;
-          
+          const hourScore = hourPreferences.indexOf(hour);
+          if (hourScore === -1) return; // N'ajouter que les horaires préférés
           availableCourts.push({
             courtId,
             hour,
             button: btn,
             hourScore,
-            courtScore,
-            isPreferredHour: hourScore < 999,
             isPreferredCourt
           });
-          
-          console.log(`Terrain ${courtId} disponible à ${hour} (score heure: ${hourScore}, score terrain: ${courtScore})`);
         });
       });
-      
-      console.log(`Total des options disponibles: ${availableCourts.length}`);
-      if (availableCourts.length === 0) return null;
-      
-      // 1. Filtrer d'abord pour ne garder que les horaires préférés si disponibles
-      const preferredHourOptions = availableCourts.filter(c => c.isPreferredHour);
-      
-      if (preferredHourOptions.length > 0) {
-        console.log(`${preferredHourOptions.length} options avec horaires préférés trouvées`);
-        
-        // NOUVELLE LOGIQUE: Trier par horaire préféré d'abord, puis par terrain préféré
-        // Trier par priorité d'horaire (le premier de la liste est prioritaire)
-        preferredHourOptions.sort((a, b) => {
-          // Comparer d'abord par score d'horaire
-          if (a.hourScore !== b.hourScore) {
-            return a.hourScore - b.hourScore;
-          }
-          // À égalité d'horaire, favoriser le terrain préféré
-          return a.courtScore - b.courtScore;
+      if (availableCourts.length > 0) {
+        // Priorité stricte :
+        availableCourts.sort((a, b) => {
+          if (a.hourScore !== b.hourScore) return a.hourScore - b.hourScore;
+          if (a.isPreferredCourt !== b.isPreferredCourt) return b.isPreferredCourt - a.isPreferredCourt;
+          return 0;
         });
-        
-        // Prendre le meilleur choix après tri
-        const best = preferredHourOptions[0];
-        
-        // Déterminer si c'est un terrain préféré
-        const onPreferredCourt = best.isPreferredCourt ? "(sur terrain préféré)" : "(sur autre terrain)";
-        console.log(`Meilleur choix trouvé: Horaire ${best.hour} ${onPreferredCourt} sur terrain ${best.courtId}`);
-        
-        best.button.click();
-        return { courtId: best.courtId, hour: best.hour };
-      } else {
-        // Aucun horaire préféré n'est disponible
-        console.log("Aucun horaire préféré n'est disponible, sélection du premier créneau disponible");
-        
-        // Essayer de privilégier le terrain préféré si aucun horaire préféré n'est disponible
-        const onPreferredCourt = availableCourts.filter(c => c.isPreferredCourt);
-        
-        if (onPreferredCourt.length > 0) {
-          const best = onPreferredCourt[0];
-          console.log(`Choix sur terrain préféré: Terrain ${best.courtId} à ${best.hour}`);
+        const best = availableCourts[0];
+        if (best) {
           best.button.click();
-          return { courtId: best.courtId, hour: best.hour };
-        } else {
-          // Prendre simplement le premier disponible
-          const best = availableCourts[0];
-          console.log(`Choix par défaut: Terrain ${best.courtId} à ${best.hour}`);
-          best.button.click();
-          return { courtId: best.courtId, hour: best.hour };
+          return { courtId: best.courtId, hour: best.hour, fallback: false };
         }
       }
+      // Si aucun horaire préféré, tenter ±30min
+      // Générer la liste des horaires ±30min
+      function addMinutesToHour(hourStr, minutes) {
+        const [h, m] = hourStr.split(':').map(Number);
+        const date = new Date(2000, 0, 1, h, m + minutes);
+        return date.toTimeString().slice(0,5);
+      }
+      const fallbackHours = [];
+      hourPreferences.forEach(h => {
+        fallbackHours.push(addMinutesToHour(h, -30));
+        fallbackHours.push(addMinutesToHour(h, 30));
+      });
+      // Chercher un créneau ±30min
+      const fallbackCourts = [];
+      courtBlocks.forEach((court) => {
+        const courtId = court.getAttribute('data-idcourt');
+        if (!courtId) return;
+        const isPreferredCourt = courtPreferences.indexOf(courtId) !== -1;
+        const buttons = court.querySelectorAll('.blocCourt_container_btn-creneau button.btn_creneau:not([disabled])');
+        buttons.forEach(btn => {
+          const hour = btn.textContent.trim();
+          if (!fallbackHours.includes(hour)) return;
+          fallbackCourts.push({
+            courtId,
+            hour,
+            button: btn,
+            isPreferredCourt
+          });
+        });
+      });
+      if (fallbackCourts.length > 0) {
+        fallbackCourts.sort((a, b) => {
+          if (a.isPreferredCourt !== b.isPreferredCourt) return b.isPreferredCourt - a.isPreferredCourt;
+          return 0;
+        });
+        const best = fallbackCourts[0];
+        if (best) {
+          best.button.click();
+          return { courtId: best.courtId, hour: best.hour, fallback: true };
+        }
+      }
+      return null;
     }, {
       courtPreferences: mergedConfig.courts.preferences || [],
       hourPreferences: mergedConfig.hourPreferences || []
     });
-    
     if (!terrainInfo) {
-      throw new Error("Aucun terrain disponible pour les créneaux.");
+      throw new Error("Aucun créneau horaire préféré ni proche n'est disponible sur aucun terrain.");
     }
-    
     const courtName = mergedConfig.courts[terrainInfo.courtId] || 'Inconnu';
-    log('success', `Terrain sélectionné: ${terrainInfo.courtId} (${courtName}) à ${terrainInfo.hour}`);
+    if (terrainInfo.fallback) {
+      log('warning', `Aucun horaire strictement préféré, mais créneau ±30min trouvé: ${terrainInfo.hour} sur terrain ${courtName}`);
+    } else {
+      log('success', `Terrain sélectionné: ${terrainInfo.courtId} (${courtName}) à ${terrainInfo.hour}`);
+    }
     await sleep(2000);
     
     // =======================================================
@@ -1176,9 +1198,5 @@ async function sendErrorEmail(errorMessage) {
     log('info', "📧 [Email désactivé] Message d'erreur:", err.message);
   } finally {
     await browser.close();
-  }
-  
-  if (mergedConfig.testMode) {
-    log('info', "Mode Test activé : aucune réservation réelle n'a été finalisée.");
   }
 })();
