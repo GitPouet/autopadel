@@ -1,49 +1,88 @@
-# AUTOPADEL Application
+# 🎾 AUTOPADEL
 
-## Description
-AUTOPADEL is a web application designed for managing reservations for paddle courts. It allows users to input their credentials, select their preferred court, and specify their reservation details through a user-friendly interface.
+Bienvenue sur **AUTOPADEL**, l’application web qui simplifie la réservation de terrains de padel !
 
-## Features
-- User authentication via email and password.
-- Selection of preferred paddle court.
-- Date and time selection for reservations.
-- Option to book in advance (up to 7 days).
-- Test mode for trial reservations.
+---
 
-## Project Structure
+## 🚀 Fonctionnalités principales
+- **Authentification** par email et mot de passe
+- **Choix du terrain** préféré
+- **Sélection de la date et de l’heure**
+- **Réservation en avance** (jusqu’à 7 jours)
+- **Mode test** pour simuler une réservation
+
+---
+
+## 🗂️ Structure du projet
 ```
-autopadel
-├── assets
-│   └── css
-│       └── style.css
-├── index.html
+autopadel/
+├── public/
+│   ├── index.html
+│   ├── favicon.ico
+│   ├── manifest.json
+│   ├── assets/
+│   │   └── css/
+│   │       └── style.css
+│   └── img/
+│       └── naderyounan_a_social_media_post_for_Padel_sport_...png
+├── server.mjs
+├── index.mjs
+├── config.js
+├── test_app.js
+├── logs/
+├── old/
+├── package.json
 └── README.md
 ```
 
-## Setup Instructions
-1. Clone the repository to your local machine.
-   ```
+---
+
+## ⚡ Installation & Lancement
+1. **Clonez le dépôt**
+   ```sh
    git clone <repository-url>
-   ```
-2. Navigate to the project directory.
-   ```
    cd autopadel
    ```
-3. Open `index.html` in your web browser to view the application.
+2. **Installez les dépendances**
+   ```sh
+   npm install
+   ```
+3. **Lancez le serveur**
+   ```sh
+   npm start
+   ```
+4. **Ouvrez l’application**
+   - Rendez-vous sur [http://localhost:3000](http://localhost:3000) (ou le port indiqué dans la console)
 
-## Usage
-- Fill in the required fields in the form:
-  - Email (username)
-  - Password
-  - Preferred court
-  - Reservation date
-  - Booking advance (in days)
-  - Preferred hours
-- Optionally, enable the test mode checkbox.
-- Click the "Lancer l'autologin" button to submit your reservation request.
+---
 
-## Contributing
-Contributions are welcome! Please submit a pull request or open an issue for any suggestions or improvements.
+## 📝 Utilisation
+- Remplissez le formulaire avec :
+  - Email
+  - Mot de passe
+  - Terrain préféré
+  - Date de réservation
+  - Nombre de jours d’avance
+  - Plage horaire souhaitée
+- (Optionnel) Activez le mode test
+- Cliquez sur **Lancer l’autologin** pour réserver
 
-## License
-This project is licensed under the MIT License. See the LICENSE file for details.# autopadel
+---
+
+## 🔒 Sécurité & Tests
+- Un script de test automatique est fourni : `test_app.js`
+- Pour vérifier le bon fonctionnement et la sécurité :
+  ```sh
+  node test_app.js
+  ```
+- Audit de sécurité des dépendances intégré
+
+---
+
+## 🤝 Contribuer
+Les contributions sont les bienvenues ! Ouvrez une issue ou une pull request pour toute suggestion ou amélioration.
+
+---
+
+## 📄 Licence
+Projet sous licence MIT. Voir le fichier LICENSE pour plus d’informations.
