@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: autopadel
+    env: node
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      # Ajoutez ici d'autres variables d'environnement si besoin (ex: LOGIN, PASSWORD)
+    autoDeploy: true
+    healthCheckPath: /
+    
+# Pour plus d'options, voir https://render.com/docs/yaml-spec
