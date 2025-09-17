@@ -659,29 +659,6 @@
       60% { transform: translateY(-3px); }
     }
     
-    /* Highlight pour les éléments importants */
-    .highlight-container {
-      position: relative;
-    }
-    
-    .highlight-effect {
-      position: absolute;
-      top: -5px;
-      right: -5px;
-      bottom: -5px;
-      left: -5px;
-      border: 2px dashed var(--primary-yellow);
-      border-radius: var(--border-radius);
-      pointer-events: none;
-      animation: rotating 8s linear infinite;
-      opacity: 0;
-    }
-    
-    @keyframes rotating {
-      from { transform: rotate(0deg); }
-      to { transform: rotate(360deg); }
-    }
-    
     .multi-date-hours {
       display: flex;
       gap: 5px;
@@ -1247,33 +1224,6 @@
         syncTutorialLayout();
         window.addEventListener('resize', syncTutorialLayout);
       }
-      
-      const addHighlightEffect = (triggerSelector, targetSelector) => {
-        const trigger = document.querySelector(triggerSelector);
-        const target = document.querySelector(targetSelector);
-        
-        if (trigger && target) {
-          if (!target.classList.contains('highlight-container')) {
-            target.classList.add('highlight-container');
-            
-            const highlightEffect = document.createElement('div');
-            highlightEffect.classList.add('highlight-effect');
-            target.appendChild(highlightEffect);
-            
-            trigger.addEventListener('mouseenter', () => {
-              highlightEffect.style.opacity = '1';
-            });
-            
-            trigger.addEventListener('mouseleave', () => {
-              highlightEffect.style.opacity = '0';
-            });
-          }
-        }
-      };
-      
-      addHighlightEffect('.tutorial-section:nth-child(2)', '.time-select-container');
-      addHighlightEffect('.tutorial-section:nth-child(3)', '.date-selection-method');
-      addHighlightEffect('.tutorial-section:nth-child(4)', '#testMode');
       
       // --- Amélioration UX : ouvrir le datepicker sur clic sur toute la case (corrigé pour ne cibler que les input de type date ET pas les selects horaires) ---
       function makeDateInputClickable(containerSelector, inputSelector) {
