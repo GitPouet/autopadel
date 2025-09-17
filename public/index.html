@@ -50,6 +50,11 @@
       line-height: 1.5;
       padding-bottom: env(safe-area-inset-bottom);
     }
+
+    body.tutorial-open {
+      overflow: hidden;
+      touch-action: none;
+    }
     
     header {
       background: linear-gradient(45deg, #00B4FF, #FF00AA);
@@ -447,19 +452,56 @@
       position: relative;
     }
     
+    .tutorial-overlay {
+      display: none;
+    }
+
     /* Pour le responsive */
     @media (max-width: 1024px) {
       .app-container {
         flex-direction: column;
       }
-      
+
       .tutorial-panel {
         width: 100%;
         order: 2;
+        position: fixed;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        max-height: 80vh;
+        transform: translateY(100%);
+        transition: transform 0.3s ease;
+        pointer-events: none;
+        border-radius: 20px 20px 0 0;
+        box-shadow: 0 -12px 32px rgba(0,0,0,0.25);
+        padding-bottom: calc(var(--spacing-lg) + env(safe-area-inset-bottom));
+        z-index: 950;
       }
-      
+
+      .tutorial-panel.is-visible {
+        transform: translateY(0);
+        pointer-events: auto;
+      }
+
       .tutorial-mobile-toggle {
         display: block;
+      }
+
+      .tutorial-overlay {
+        display: block;
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,0.45);
+        z-index: 900;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.3s ease;
+      }
+
+      .tutorial-overlay.is-visible {
+        opacity: 1;
+        pointer-events: auto;
       }
     }
     
@@ -682,10 +724,6 @@
         <div class="form-group">
           <label for="password">MOT DE PASSE</label>
           <input type="password" id="password" name="password" required placeholder="Votre mot de passe" autocomplete="current-password">
-          <div style="margin-top:8px; display:flex; align-items:center; gap:8px;">
-            <input type="checkbox" id="rememberCredentials" name="rememberCredentials" style="width:18px; height:18px;">
-            <label for="rememberCredentials" style="font-weight:normal; font-size:15px; margin:0;">Mémoriser les identifiants</label>
-          </div>
         </div>
         <div class="form-group">
           <label for="preferredCourt">
@@ -755,52 +793,34 @@
           </label>
           <div class="time-select-container">
             <select id="preferredHour1" name="preferredHour1" required>
-              <option value="09:00">09:00</option>
-              <option value="10:00">10:00</option>
+              <option value="09:30">09:30</option>
               <option value="11:00">11:00</option>
-              <option value="12:00">12:00</option>
-              <option value="13:00">13:00</option>
+              <option value="12:30">12:30</option>
               <option value="14:00" selected>14:00</option>
-              <option value="15:00">15:00</option>
-              <option value="16:00">16:00</option>
               <option value="17:00">17:00</option>
-              <option value="18:00">18:00</option>
-              <option value="19:00">19:00</option>
-              <option value="20:00">20:00</option>
+              <option value="18:30">18:30</option>
               <option value="21:00">21:00</option>
             </select>
-            
+
             <select id="preferredHour2" name="preferredHour2" required>
               <option value="">-- Optionnel --</option>
-              <option value="09:00">09:00</option>
-              <option value="10:00">10:00</option>
+              <option value="09:30">09:30</option>
               <option value="11:00">11:00</option>
-              <option value="12:00">12:00</option>
-              <option value="13:00">13:00</option>
+              <option value="12:30">12:30</option>
               <option value="14:00">14:00</option>
-              <option value="15:00">15:00</option>
-              <option value="16:00" selected>16:00</option>
-              <option value="17:00">17:00</option>
-              <option value="18:00">18:00</option>
-              <option value="19:00">19:00</option>
-              <option value="20:00">20:00</option>
+              <option value="17:00" selected>17:00</option>
+              <option value="18:30">18:30</option>
               <option value="21:00">21:00</option>
             </select>
-            
+
             <select id="preferredHour3" name="preferredHour3">
               <option value="">-- Optionnel --</option>
-              <option value="09:00">09:00</option>
-              <option value="10:00">10:00</option>
+              <option value="09:30">09:30</option>
               <option value="11:00">11:00</option>
-              <option value="12:00">12:00</option>
-              <option value="13:00">13:00</option>
+              <option value="12:30">12:30</option>
               <option value="14:00">14:00</option>
-              <option value="15:00">15:00</option>
-              <option value="16:00">16:00</option>
               <option value="17:00">17:00</option>
-              <option value="18:00" selected>18:00</option>
-              <option value="19:00">19:00</option>
-              <option value="20:00">20:00</option>
+              <option value="18:30" selected>18:30</option>
               <option value="21:00">21:00</option>
             </select>
           </div>
@@ -885,8 +905,10 @@
         </ul>
       </div>
     </aside>
-    
-    <button class="tutorial-mobile-toggle" id="tutorialToggle">
+
+    <div class="tutorial-overlay" id="tutorialOverlay" aria-hidden="true"></div>
+
+    <button class="tutorial-mobile-toggle" id="tutorialToggle" type="button" aria-controls="tutorialPanel" aria-expanded="false" aria-label="Afficher le guide">
       <i class="fas fa-question"></i>
     </button>
   </div>
@@ -904,6 +926,62 @@
     let deferredPrompt;
 
     document.addEventListener('DOMContentLoaded', function() {
+      const usernameInput = document.getElementById('username');
+      const passwordInput = document.getElementById('password');
+      const STORAGE_KEYS = {
+        username: 'autopadel.savedUsername',
+        password: 'autopadel.savedPassword'
+      };
+
+      const isStorageAvailable = (function() {
+        try {
+          const testKey = '__autopadel_storage_test__';
+          localStorage.setItem(testKey, '1');
+          localStorage.removeItem(testKey);
+          return true;
+        } catch (error) {
+          console.warn('Stockage local indisponible :', error);
+          return false;
+        }
+      })();
+
+      const persistValue = function(key, value) {
+        if (!isStorageAvailable) return;
+        if (value && value.length > 0) {
+          localStorage.setItem(key, value);
+        } else {
+          localStorage.removeItem(key);
+        }
+      };
+
+      if (isStorageAvailable) {
+        const savedUsername = localStorage.getItem(STORAGE_KEYS.username);
+        if (savedUsername && usernameInput) {
+          usernameInput.value = savedUsername;
+        }
+
+        const savedPassword = localStorage.getItem(STORAGE_KEYS.password);
+        if (savedPassword && passwordInput) {
+          passwordInput.value = savedPassword;
+        }
+      }
+
+      if (usernameInput) {
+        const handleUsernamePersist = function(event) {
+          persistValue(STORAGE_KEYS.username, event.target.value.trim());
+        };
+        usernameInput.addEventListener('input', handleUsernamePersist);
+        usernameInput.addEventListener('change', handleUsernamePersist);
+      }
+
+      if (passwordInput) {
+        const handlePasswordPersist = function(event) {
+          persistValue(STORAGE_KEYS.password, event.target.value);
+        };
+        passwordInput.addEventListener('input', handlePasswordPersist);
+        passwordInput.addEventListener('change', handlePasswordPersist);
+      }
+
       const specificOption = document.getElementById('specificDateOption');
       const multipleOption = document.getElementById('multipleDatesOption');
       const reservationDateInput = document.getElementById('reservationDate');
@@ -934,17 +1012,17 @@
           option.textContent = hour;
           select.appendChild(option);
         });
-        
+
         // Pré-sélectionner les valeurs par défaut
         if (index === 0) select.value = "14:00";
-        if (index === 1) select.value = "14:30";
-        if (index === 2) select.value = "15:00";
+        if (index === 1) select.value = "17:00";
+        if (index === 2) select.value = "18:30";
       });
-      
+
       function generateHourOptions() {
-        // Liste stricte des horaires autorisés (voir image)
+        // Liste stricte des horaires proposés par le club
         return [
-          "09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00", "17:00", "18:00", "19:00", "20:00", "21:00"
+          "09:30", "11:00", "12:30", "14:00", "17:00", "18:30", "21:00"
         ];
       }
       
@@ -1089,32 +1167,85 @@
 
       const tutorialToggle = document.getElementById('tutorialToggle');
       const tutorialPanel = document.getElementById('tutorialPanel');
-      
+      const tutorialOverlay = document.getElementById('tutorialOverlay');
+      const bodyElement = document.body;
+
+      const isMobileView = () => window.innerWidth <= 1024;
+
+      const closeTutorialPanel = () => {
+        if (!tutorialPanel) return;
+        tutorialPanel.classList.remove('is-visible');
+        if (tutorialOverlay) {
+          tutorialOverlay.classList.remove('is-visible');
+          tutorialOverlay.setAttribute('aria-hidden', 'true');
+        }
+        if (bodyElement) {
+          bodyElement.classList.remove('tutorial-open');
+        }
+        if (tutorialToggle) {
+          tutorialToggle.innerHTML = '<i class="fas fa-question"></i>';
+          tutorialToggle.setAttribute('aria-expanded', 'false');
+          tutorialToggle.setAttribute('aria-label', 'Afficher le guide');
+        }
+      };
+
+      const openTutorialPanel = () => {
+        if (!tutorialPanel) return;
+        tutorialPanel.classList.add('is-visible');
+        if (tutorialOverlay) {
+          tutorialOverlay.classList.add('is-visible');
+          tutorialOverlay.setAttribute('aria-hidden', 'false');
+        }
+        if (bodyElement) {
+          bodyElement.classList.add('tutorial-open');
+        }
+        if (tutorialToggle) {
+          tutorialToggle.innerHTML = '<i class="fas fa-times"></i>';
+          tutorialToggle.setAttribute('aria-expanded', 'true');
+          tutorialToggle.setAttribute('aria-label', 'Masquer le guide');
+        }
+      };
+
+      const syncTutorialLayout = () => {
+        if (!tutorialPanel) return;
+        if (isMobileView()) {
+          closeTutorialPanel();
+        } else {
+          tutorialPanel.classList.remove('is-visible');
+          if (tutorialOverlay) {
+            tutorialOverlay.classList.remove('is-visible');
+            tutorialOverlay.setAttribute('aria-hidden', 'true');
+          }
+          if (bodyElement) {
+            bodyElement.classList.remove('tutorial-open');
+          }
+          if (tutorialToggle) {
+            tutorialToggle.innerHTML = '<i class="fas fa-question"></i>';
+            tutorialToggle.setAttribute('aria-expanded', 'false');
+            tutorialToggle.setAttribute('aria-label', 'Afficher le guide');
+          }
+        }
+      };
+
       if (tutorialToggle && tutorialPanel) {
         tutorialToggle.addEventListener('click', () => {
-          if (window.innerWidth <= 1024) {
-            if (tutorialPanel.style.display === 'none') {
-              tutorialPanel.style.display = 'flex';
-              tutorialToggle.innerHTML = '<i class="fas fa-times"></i>';
-            } else {
-              tutorialPanel.style.display = 'none';
-              tutorialToggle.innerHTML = '<i class="fas fa-question"></i>';
-            }
+          if (!isMobileView()) {
+            return;
           }
-        });
-        
-        if (window.innerWidth <= 1024) {
-          tutorialPanel.style.display = 'none';
-        }
-        
-        window.addEventListener('resize', () => {
-          if (window.innerWidth > 1024) {
-            tutorialPanel.style.display = 'flex';
+
+          if (tutorialPanel.classList.contains('is-visible')) {
+            closeTutorialPanel();
           } else {
-            tutorialPanel.style.display = 'none';
-            tutorialToggle.innerHTML = '<i class="fas fa-question"></i>';
+            openTutorialPanel();
           }
         });
+
+        if (tutorialOverlay) {
+          tutorialOverlay.addEventListener('click', closeTutorialPanel);
+        }
+
+        syncTutorialLayout();
+        window.addEventListener('resize', syncTutorialLayout);
       }
       
       const addHighlightEffect = (triggerSelector, targetSelector) => {
