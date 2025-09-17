@@ -1,7 +1,71 @@
-import axios from 'axios';
-import { wrapper } from 'axios-cookiejar-support';
 import { CookieJar } from 'tough-cookie';
 import * as cheerio from 'cheerio';
+
+let axiosLoaderPromise = null;
+let filePolyfillPromise = null;
+
+async function ensureFilePolyfill() {
+  if (typeof globalThis.File === 'function') {
+    return;
+  }
+  if (!filePolyfillPromise) {
+    filePolyfillPromise = (async () => {
+      try {
+        const [blobModule, fileModule] = await Promise.all([
+          typeof globalThis.Blob === 'function'
+            ? Promise.resolve(null)
+            : import('fetch-blob'),
+          import('fetch-blob/file.js')
+        ]);
+        if (blobModule && typeof blobModule.default === 'function' && typeof globalThis.Blob !== 'function') {
+          globalThis.Blob = blobModule.default;
+        }
+        const fileCtor =
+          typeof fileModule.default === 'function'
+            ? fileModule.default
+            : typeof fileModule.File === 'function'
+              ? fileModule.File
+              : null;
+        if (fileCtor && typeof globalThis.File !== 'function') {
+          globalThis.File = fileCtor;
+        }
+      } catch (error) {
+        const reason = error instanceof Error ? error.message : String(error);
+        throw new Error(
+          `Impossible d'initialiser le polyfill File: ${reason}`
+        );
+      }
+      if (typeof globalThis.File !== 'function') {
+        throw new Error(
+          "Le polyfill File n'a pas pu être initialisé. axios requiert l'API File en environnement Node.js."
+        );
+      }
+    })();
+  }
+  await filePolyfillPromise;
+}
+
+async function loadAxiosDependencies() {
+  if (!axiosLoaderPromise) {
+    axiosLoaderPromise = (async () => {
+      await ensureFilePolyfill();
+      const [{ default: axios }, cookieJarModule] = await Promise.all([
+        import('axios'),
+        import('axios-cookiejar-support')
+      ]);
+      const wrapper =
+        cookieJarModule.wrapper ||
+        (typeof cookieJarModule.default === 'function'
+          ? cookieJarModule.default
+          : cookieJarModule.default?.wrapper);
+      if (typeof wrapper !== 'function') {
+        throw new Error('axios-cookiejar-support wrapper helper non disponible.');
+      }
+      return { axios, wrapper };
+    })();
+  }
+  return axiosLoaderPromise;
+}
 
 const DEFAULT_HTTP_SETTINGS = {
   mode: 'live',
@@ -452,7 +516,8 @@ function buildHtmlHeaders(httpSettings) {
   };
 }
 
-function createHttpClient(httpSettings) {
+async function createHttpClient(httpSettings) {
+  const { axios, wrapper } = await loadAxiosDependencies();
   const jar = new CookieJar();
   const client = wrapper(
     axios.create({
@@ -693,7 +758,7 @@ export async function runHttpRunner({ config, runtime }) {
     await runMockFlow(config, runtime, httpSettings, target);
     return;
   }
-  const { client } = createHttpClient(httpSettings);
+  const { client } = await createHttpClient(httpSettings);
   await performLogin(client, config, runtime, httpSettings);
   const context = await fetchReservationContext(
     client,
