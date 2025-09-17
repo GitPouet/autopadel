@@ -150,6 +150,18 @@ async function sendErrorEmail(errorMessage) {
     useCourtPreferences: false, // Désactivé par défaut
     courts: {
       preferences: [] // Vide par défaut (prendra le premier disponible)
+    },
+    puppeteer: {
+      headless: "new",
+      timeout: 60000,
+      protocolTimeout: 180000,
+      args: [
+        '--no-sandbox',
+        '--disable-setuid-sandbox',
+        '--disable-dev-shm-usage',
+        '--disable-accelerated-2d-canvas',
+        '--start-maximized', // Pour démarrer avec une fenêtre maximisée
+      ]
     }
   };
 
@@ -161,21 +173,20 @@ async function sendErrorEmail(errorMessage) {
     courts: {
       ...config.courts,
       preferences: config.courts?.preferences?.length > 0 ? config.courts.preferences : defaultConfig.courts.preferences
+    },
+    puppeteer: {
+      ...defaultConfig.puppeteer,
+      ...(config.puppeteer || {})
     }
   };
 
   // Lancement du navigateur (mode non-headless pour débogage)
   const browser = await puppeteer.launch({
-    headless: "new",  // false pour voir le navigateur, true ou 'new' pour le cacher
-    timeout: 60000,
+    headless: mergedConfig.puppeteer.headless,  // false pour voir le navigateur, true ou 'new' pour le cacher
+    timeout: mergedConfig.puppeteer.timeout,
+    protocolTimeout: mergedConfig.puppeteer.protocolTimeout,
     defaultViewport: null, // Pour que la taille du viewport s'adapte à la fenêtre
-    args: [
-      '--no-sandbox',
-      '--disable-setuid-sandbox',
-      '--disable-dev-shm-usage',
-      '--disable-accelerated-2d-canvas',
-      '--start-maximized', // Pour démarrer avec une fenêtre maximisée
-    ]
+    args: mergedConfig.puppeteer.args
   });
   const page = await browser.newPage();
 
