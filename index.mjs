@@ -21,6 +21,7 @@ import puppeteer from 'puppeteer';
 import nodemailer from 'nodemailer';
 import fs from 'fs';
 import path from 'path';
+import os from 'os';
 
 // Analyser les arguments de ligne de commande pour un fichier de configuration alternatif
 const args = process.argv.slice(2);
@@ -49,6 +50,28 @@ try {
 // Fonction utilitaire pour faire une pause
 function sleep(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+function collectSystemDiagnostics() {
+  const diagnostics = {
+    platform: process.platform,
+    arch: process.arch,
+    nodeVersion: process.version,
+    uptime: process.uptime(),
+    memoryUsage: process.memoryUsage(),
+    freeMemory: os.freemem(),
+    totalMemory: os.totalmem()
+  };
+
+  if (typeof process.resourceUsage === 'function') {
+    try {
+      diagnostics.resourceUsage = process.resourceUsage();
+    } catch (error) {
+      diagnostics.resourceUsageError = error.message;
+    }
+  }
+
+  return diagnostics;
 }
 
 // Ajout d'une fonction pour écrire les logs dans un fichier log.txt
@@ -143,6 +166,23 @@ async function sendErrorEmail(errorMessage) {
 
 // Fonction principale asynchrone
 (async () => {
+  let browser;
+  let page;
+  let reservationCompleted = false;
+  let launchAttempts = 0;
+  const maxLaunchAttempts = 2;
+  let mergedConfig = {};
+
+  const isNetworkEnableProtocolError = (error) => {
+    if (!error) return false;
+    const message = error.message || '';
+    return (
+      (error.name === 'ProtocolError' && /Network\.enable/i.test(message)) ||
+      /Protocol error \(Network\.enable\)/i.test(message)
+    );
+  };
+
+  try {
   // Définition des valeurs par défaut si non spécifiées dans la config
   const defaultConfig = {
     bookingAdvance: 7, // J+7 par défaut
@@ -166,7 +206,7 @@ async function sendErrorEmail(errorMessage) {
   };
 
   // Fusion avec la configuration existante (sans modifier l'objet config original)
-  const mergedConfig = {
+  mergedConfig = {
     ...defaultConfig,
     ...config,
     hourPreferences: config.hourPreferences?.length > 0 ? config.hourPreferences : defaultConfig.hourPreferences,
@@ -180,15 +220,59 @@ async function sendErrorEmail(errorMessage) {
     }
   };
 
-  // Lancement du navigateur (mode non-headless pour débogage)
-  const browser = await puppeteer.launch({
-    headless: mergedConfig.puppeteer.headless,  // false pour voir le navigateur, true ou 'new' pour le cacher
-    timeout: mergedConfig.puppeteer.timeout,
-    protocolTimeout: mergedConfig.puppeteer.protocolTimeout,
-    defaultViewport: null, // Pour que la taille du viewport s'adapte à la fenêtre
-    args: mergedConfig.puppeteer.args
-  });
-  const page = await browser.newPage();
+  while (launchAttempts < maxLaunchAttempts && !page) {
+    let launchBrowser;
+    try {
+      launchAttempts += 1;
+      log('info', `Tentative de démarrage de Puppeteer (${launchAttempts}/${maxLaunchAttempts})...`);
+      launchBrowser = await puppeteer.launch({
+        headless: mergedConfig.puppeteer.headless,  // false pour voir le navigateur, true ou 'new' pour le cacher
+        timeout: mergedConfig.puppeteer.timeout,
+        protocolTimeout: mergedConfig.puppeteer.protocolTimeout,
+        defaultViewport: null, // Pour que la taille du viewport s'adapte à la fenêtre
+        args: mergedConfig.puppeteer.args
+      });
+      const newPage = await launchBrowser.newPage();
+      browser = launchBrowser;
+      page = newPage;
+    } catch (error) {
+      if (launchBrowser) {
+        try {
+          await launchBrowser.close();
+        } catch (closeError) {
+          log('warning', `Erreur lors de la fermeture du navigateur après échec de lancement: ${closeError.message}`);
+        }
+      }
+
+      const errorDetails = {
+        attempt: launchAttempts,
+        name: error?.name,
+        message: error?.message,
+        stack: error?.stack
+      };
+      log('error', `Échec de démarrage/connexion Puppeteer (tentative ${launchAttempts}).`, errorDetails);
+      log('info', "Diagnostics supplémentaires collectés pour analyse.", {
+        ...collectSystemDiagnostics(),
+        chromiumExecutablePath: mergedConfig.puppeteer?.executablePath || 'par défaut'
+      });
+
+      const shouldRetry = isNetworkEnableProtocolError(error) && launchAttempts < maxLaunchAttempts;
+      if (shouldRetry) {
+        log('warning', "ProtocolError 'Network.enable' détectée. Nouvelle tentative dans 5 secondes...");
+        await sleep(5000);
+        continue;
+      }
+
+      log('error', "Abandon du démarrage de Puppeteer. Vérifiez que Chromium est disponible et que la machine dispose de ressources suffisantes.");
+      process.exitCode = 1;
+      throw error;
+    }
+  }
+
+  if (!browser || !page) {
+    process.exitCode = 1;
+    throw new Error("Puppeteer n'a pas pu ouvrir de page après plusieurs tentatives.");
+  }
 
   // Ajout des gestionnaires d'événements pour le logging
   page.on('console', msg => console.log('PAGE LOG:', msg.text()));
@@ -1201,13 +1285,48 @@ async function sendErrorEmail(errorMessage) {
     }
     
     log('success', "Processus de réservation terminé.");
+    reservationCompleted = true;
+    process.exitCode = 0;
   } catch (err) {
     log('error', "Erreur durant le processus :", err.message);
-    await page.screenshot({ path: `error-${Date.now()}.png` });
-    await captureScreenOnError(page, 'process_error');
+    if (page) {
+      try {
+        await captureScreenOnError(page, 'process_error');
+      } catch (captureError) {
+        log('warning', `Impossible de capturer l'écran après erreur: ${captureError.message}`);
+      }
+    }
     // Commenté temporairement - Log de l'erreur sans envoi d'email
     log('info', "📧 [Email désactivé] Message d'erreur:", err.message);
+    process.exitCode = 1;
+  }
+  } catch (error) {
+    if (!process.exitCode || process.exitCode === 0) {
+      process.exitCode = 1;
+    }
+    if (!page) {
+      log('error', `Arrêt du script avant l'ouverture d'une page Puppeteer: ${error.message}`);
+      log('info', "Vérifiez la disponibilité de Chromium, les dépendances Puppeteer et les ressources système (mémoire/CPU).");
+    } else {
+      log('error', `Arrêt prématuré du script: ${error.message}`);
+    }
   } finally {
-    await browser.close();
+    if (browser) {
+      try {
+        await browser.close();
+      } catch (closeError) {
+        log('warning', `Erreur lors de la fermeture du navigateur: ${closeError.message}`);
+      }
+    }
+
+    if (reservationCompleted) {
+      process.exitCode = 0;
+      log('success', 'Script terminé avec succès (code de sortie 0).');
+    } else {
+      if (process.exitCode === undefined) {
+        process.exitCode = 1;
+      }
+      log('error', `Script terminé avec le code de sortie ${process.exitCode}. Vérifiez la disponibilité de Chromium, les ressources système (mémoire/CPU) et l'accès réseau.`);
+    }
   }
 })();
