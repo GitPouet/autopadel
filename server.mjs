@@ -16,6 +16,55 @@ const __dirname = dirname(__filename);
 const app = express();
 const PORT = process.env.PORT || 3000; // Changer 3000 par un autre port (3001, 3002, 8080, etc.)
 
+// File d'exécution pour garantir qu'un seul script index.mjs tourne à la fois
+const JOB_DELAY_BETWEEN_RUNS = 500; // ms entre deux exécutions pour laisser le système respirer
+let executionQueue = Promise.resolve();
+
+function enqueueRun(configFileName, contextDescription = '') {
+  executionQueue = executionQueue
+    .catch((error) => {
+      console.error('Erreur précédente dans la file d\'exécution:', error);
+    })
+    .then(() => runQueuedJob(configFileName, contextDescription));
+
+  return executionQueue;
+}
+
+function runQueuedJob(configFileName, contextDescription) {
+  return new Promise((resolve) => {
+    const args = [path.resolve(__dirname, 'index.mjs')];
+    if (configFileName) {
+      args.push(`--config=${configFileName}`);
+    }
+
+    const child = spawn('node', args, {
+      stdio: 'inherit',
+      env: { ...process.env, NODE_PATH: process.cwd() }
+    });
+
+    const contextInfo = contextDescription ? ` (${contextDescription})` : '';
+    const configInfo = configFileName || 'config par défaut';
+    let finished = false;
+
+    const finalize = () => {
+      if (finished) return;
+      finished = true;
+      setTimeout(resolve, JOB_DELAY_BETWEEN_RUNS);
+    };
+
+    child.on('error', (error) => {
+      console.error(`Erreur lors du lancement de index.mjs${contextInfo} [${configInfo}]:`, error);
+      finalize();
+    });
+
+    child.on('close', (code, signal) => {
+      const exitLabel = signal ? `signal ${signal}` : `code ${code}`;
+      console.log(`index.mjs${contextInfo} terminé avec ${exitLabel} [${configInfo}]`);
+      finalize();
+    });
+  });
+}
+
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -200,30 +249,12 @@ app.post('/start', (req, res) => {
           // Correction: lancer le script pour CHAQUE date en mode test
           if (testMode) {
             console.log(`Mode test activé, exécution immédiate pour ${dateStr} avec horaires ${dateHours.join(', ')}...`);
-            const child = spawn('node', [
-              path.resolve(__dirname, 'index.mjs'),
-              `--config=${configFileName}`
-            ], {
-              stdio: 'inherit',
-              env: { ...process.env, NODE_PATH: process.cwd() }
-            });
-            child.on('close', (code) => {
-              console.log(`index.js (test) pour ${dateStr} terminé avec le code ${code}`);
-            });
+            enqueueRun(configFileName, `test ${dateStr}`);
           } else {
             // Programmation avec node-schedule
-            const job = schedule.scheduleJob(executionDate, function() {
+            schedule.scheduleJob(executionDate, function() {
               console.log(`Exécution planifiée pour ${dateStr} démarrée à ${new Date().toLocaleString()}`);
-              const child = spawn('node', [
-                path.resolve(__dirname, 'index.mjs'),
-                `--config=${configFileName}`
-              ], {
-                stdio: 'inherit',
-                env: { ...process.env, NODE_PATH: process.cwd() }
-              });
-              child.on('close', (code) => {
-                console.log(`index.js pour ${dateStr} terminé avec le code ${code}`);
-              });
+              enqueueRun(configFileName, `planifié ${dateStr}`);
             });
           }
         } catch(e) {
@@ -292,26 +323,14 @@ export default ${JSON.stringify(configObject, null, 2)};`;
   // Option pour lancer immédiatement en mode test
   if (testMode) {
     console.log("Mode test activé, exécution immédiate...");
-    const child = spawn('node', [path.resolve(__dirname, 'index.mjs')], { 
-      stdio: 'inherit',
-      env: { ...process.env, NODE_PATH: process.cwd() }
-    });
-    child.on('close', (code) => {
-      console.log(`index.js terminé avec le code ${code}`);
-    });
-    
+    enqueueRun(undefined, 'mode test immédiat');
+
     return res.json({ message: `Script lancé en mode test. Vérifiez la console pour les détails.` });
   } else {
     // Programmation avec node-schedule
-    const job = schedule.scheduleJob(executionTime, function() {
+    schedule.scheduleJob(executionTime, function() {
       console.log(`Exécution planifiée démarrée à ${new Date().toLocaleString()}`);
-      const child = spawn('node', [path.resolve(__dirname, 'index.mjs')], { 
-        stdio: 'inherit',
-        env: { ...process.env, NODE_PATH: process.cwd() }
-      });
-      child.on('close', (code) => {
-        console.log(`index.js terminé avec le code ${code}`);
-      });
+      enqueueRun(undefined, `planifié ${configObject.reservationDate}`);
     });
     
     let message = "";
