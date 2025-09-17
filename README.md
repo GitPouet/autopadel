@@ -77,6 +77,11 @@ autopadel/
   ```
 - Audit de sécurité des dépendances intégré
 
+## 🧵 Gestion séquentielle des scripts
+- Tous les lancements de `index.mjs` passent par une file d'attente interne (`enqueueRun`).
+- La file garantit qu'une seule instance du script s'exécute à la fois, avec une courte pause entre deux jobs.
+- Les codes de sortie sont journalisés à la fermeture du processus enfant. En cas d'erreur lors du lancement, celle-ci est loguée et la file poursuit les exécutions suivantes.
+
 ---
 
 ## 🤝 Contribuer
