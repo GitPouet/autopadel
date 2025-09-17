@@ -114,7 +114,9 @@ app.post('/start', (req, res) => {
       preferredHour1 = '',
       preferredHour2 = '',
       preferredHour3 = '',
-      testMode = false
+      testMode = false,
+      engine = 'http',
+      httpMode = 'live'
     } = req.body;
 
     // Vérification supplémentaire pour éviter les opérations sur undefined
@@ -148,6 +150,10 @@ app.post('/start', (req, res) => {
     const baseConfigObject = {
       loginUrl: 'https://centralsportclub.gestion-sports.com/connexion.php?',
       memberUrl: 'https://centralsportclub.gestion-sports.com/membre/',
+      engine: engine || 'http',
+      http: {
+        mode: httpMode || 'live'
+      },
       username: username,
       password: password,
       useCourtPreferences: Boolean(preferredCourt && preferredCourt !== ''),

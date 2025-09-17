@@ -115,6 +115,79 @@ function log(type, message, details = null) {
   logToFile(type, message, details);
 }
 
+const BASE_DEFAULT_CONFIG = {
+  bookingAdvance: 7,
+  hourPreferences: ["14:00", "15:00", "16:00"],
+  useCourtPreferences: false,
+  courts: {
+    preferences: []
+  },
+  puppeteer: {
+    headless: "new",
+    timeout: 60000,
+    protocolTimeout: 180000,
+    args: [
+      '--no-sandbox',
+      '--disable-setuid-sandbox',
+      '--disable-dev-shm-usage',
+      '--disable-accelerated-2d-canvas',
+      '--start-maximized'
+    ]
+  }
+};
+
+function buildMergedConfig(rawConfig = {}) {
+  const providedCourts = rawConfig.courts || {};
+  const mergedCourts = {
+    ...(BASE_DEFAULT_CONFIG.courts || {}),
+    ...providedCourts,
+    preferences:
+      Array.isArray(providedCourts.preferences) && providedCourts.preferences.length > 0
+        ? providedCourts.preferences
+        : BASE_DEFAULT_CONFIG.courts.preferences
+  };
+
+  return {
+    ...BASE_DEFAULT_CONFIG,
+    ...rawConfig,
+    hourPreferences:
+      Array.isArray(rawConfig.hourPreferences) && rawConfig.hourPreferences.length > 0
+        ? rawConfig.hourPreferences
+        : BASE_DEFAULT_CONFIG.hourPreferences,
+    courts: mergedCourts,
+    puppeteer: {
+      ...BASE_DEFAULT_CONFIG.puppeteer,
+      ...(rawConfig.puppeteer || {})
+    }
+  };
+}
+
+const runtimeContext = {
+  log,
+  logToFile,
+  sleep
+};
+
+let mergedConfig = buildMergedConfig(config);
+const requestedEngine = (
+  mergedConfig.engine ||
+  process.env.BOOKING_ENGINE ||
+  'puppeteer'
+).toString().toLowerCase();
+
+if (requestedEngine === 'http') {
+  log('step', 'Moteur HTTP sélectionné, démarrage de l\'exécution...');
+  try {
+    const { runHttpRunner } = await import('./http-runner.mjs');
+    await runHttpRunner({ config: mergedConfig, runtime: runtimeContext });
+    log('success', 'Exécution terminée avec le moteur HTTP.');
+    process.exit(0);
+  } catch (error) {
+    log('error', `Erreur du moteur HTTP: ${error.message}`, error?.stack || error);
+    process.exit(1);
+  }
+}
+
 // Ajout d'une fonction pour déplacer les captures d'écran dans un dossier logs/ avec le même nom que le log
 import { renameSync, existsSync, mkdirSync } from 'fs';
 function moveScreenshotToLogs(filename) {
@@ -171,7 +244,6 @@ async function sendErrorEmail(errorMessage) {
   let reservationCompleted = false;
   let launchAttempts = 0;
   const maxLaunchAttempts = 2;
-  let mergedConfig = {};
 
   const isNetworkEnableProtocolError = (error) => {
     if (!error) return false;
@@ -183,42 +255,7 @@ async function sendErrorEmail(errorMessage) {
   };
 
   try {
-  // Définition des valeurs par défaut si non spécifiées dans la config
-  const defaultConfig = {
-    bookingAdvance: 7, // J+7 par défaut
-    hourPreferences: ["14:00", "15:00", "16:00"], // Horaires par défaut
-    useCourtPreferences: false, // Désactivé par défaut
-    courts: {
-      preferences: [] // Vide par défaut (prendra le premier disponible)
-    },
-    puppeteer: {
-      headless: "new",
-      timeout: 60000,
-      protocolTimeout: 180000,
-      args: [
-        '--no-sandbox',
-        '--disable-setuid-sandbox',
-        '--disable-dev-shm-usage',
-        '--disable-accelerated-2d-canvas',
-        '--start-maximized', // Pour démarrer avec une fenêtre maximisée
-      ]
-    }
-  };
-
-  // Fusion avec la configuration existante (sans modifier l'objet config original)
-  mergedConfig = {
-    ...defaultConfig,
-    ...config,
-    hourPreferences: config.hourPreferences?.length > 0 ? config.hourPreferences : defaultConfig.hourPreferences,
-    courts: {
-      ...config.courts,
-      preferences: config.courts?.preferences?.length > 0 ? config.courts.preferences : defaultConfig.courts.preferences
-    },
-    puppeteer: {
-      ...defaultConfig.puppeteer,
-      ...(config.puppeteer || {})
-    }
-  };
+    mergedConfig = buildMergedConfig(config);
 
   while (launchAttempts < maxLaunchAttempts && !page) {
     let launchBrowser;

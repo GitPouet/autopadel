@@ -67,6 +67,12 @@ autopadel/
 - (Optionnel) Activez le mode test
 - Cliquez sur **Lancer l’autologin** pour réserver
 
+## 🛠️ Moteurs d'automatisation
+- **Puppeteer (`engine: "puppeteer"`)** : moteur historique basé sur un navigateur Chromium automatisé. Il reste disponible pour les scénarios nécessitant une reproduction fidèle de l'interface web.
+- **HTTP (`engine: "http"`)** : nouveau client léger qui rejoue directement les requêtes réseau. Il peut être configuré via la clé `http` du fichier `config.js` (sélecteurs spécifiques, endpoints, mode mock, etc.).
+  - Pour des tests hors-ligne, définissez `http.mode: "mock"` et fournissez des créneaux fictifs (`http.mockData.availableSlots`).
+  - En mode « live », le script tente la connexion et la réservation à partir des informations fournies, sans lancer Chromium.
+
 ---
 
 ## 🔒 Sécurité & Tests
