@@ -2,6 +2,10 @@
 export default {
   "loginUrl": "https://centralsportclub.gestion-sports.com/connexion.php?",
   "memberUrl": "https://centralsportclub.gestion-sports.com/membre/",
+  "engine": "http",
+  "http": {
+    "mode": "live"
+  },
   "username": "rocqueslio@gmail.com",
   "password": "q9cw!hK9BPFEWZd",
   "useCourtPreferences": true,
