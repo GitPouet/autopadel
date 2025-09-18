@@ -72,6 +72,7 @@ autopadel/
 - **HTTP (`engine: "http"`)** : nouveau client léger qui rejoue directement les requêtes réseau. Il peut être configuré via la clé `http` du fichier `config.js` (sélecteurs spécifiques, endpoints, mode mock, etc.).
   - Pour des tests hors-ligne, définissez `http.mode: "mock"` et fournissez des créneaux fictifs (`http.mockData.availableSlots`).
   - En mode « live », le script tente la connexion et la réservation à partir des informations fournies, sans lancer Chromium.
+  - Un polyfill `File` minimal est automatiquement appliqué pour assurer la compatibilité avec les versions de Node.js dépourvues de cette API globale ; si `Blob` est également absent, un fallback via `fetch-blob` est chargé avant initialisation.
 
 ---
 
