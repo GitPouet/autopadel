@@ -2,55 +2,10 @@ import { CookieJar } from 'tough-cookie';
 import * as cheerio from 'cheerio';
 
 let axiosLoaderPromise = null;
-
-function ensureFilePolyfill() {
-  if (typeof globalThis.File === 'function') {
-    return;
-  }
-  class FilePolyfill extends Blob {
-    constructor(fileBits, fileName, options = {}) {
-      if (arguments.length < 2) {
-        throw new TypeError("Failed to construct 'File': 2 arguments required.");
-      }
-      super(fileBits, options);
-      const lastModified =
-        options && typeof options.lastModified === 'number'
-          ? options.lastModified
-          : Date.now();
-      Object.defineProperties(this, {
-        name: {
-          value: String(fileName),
-          writable: false,
-          enumerable: true,
-          configurable: false
-        },
-        lastModified: {
-          value: lastModified,
-          writable: false,
-          enumerable: true,
-          configurable: false
-        },
-        webkitRelativePath: {
-          value: options?.webkitRelativePath || '',
-          writable: false,
-          enumerable: false,
-          configurable: false
-        }
-      });
-    }
-
-    get [Symbol.toStringTag]() {
-      return 'File';
-    }
-  }
-
-  globalThis.File = FilePolyfill;
 }
 
 async function loadAxiosDependencies() {
   if (!axiosLoaderPromise) {
-    ensureFilePolyfill();
-    axiosLoaderPromise = (async () => {
       const [{ default: axios }, cookieJarModule] = await Promise.all([
         import('axios'),
         import('axios-cookiejar-support')
